@@ -1,0 +1,209 @@
+<!doctype html>
+<html lang="ko">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Prologue</title>
+  <style>
+    html,
+    body {
+      margin: 0;
+      background: #fff;
+      overflow-x: hidden;
+    }
+
+    /* 중앙 정렬 */
+    .wrap {
+      width: 100vw;
+      display: flex;
+      justify-content: center;
+      background: #fff;
+    }
+
+    /*
+      "처음 로드시" 딱 1화면(844px 기준 디자인)을 보여주는 프레임.
+      실제 화면은 기기마다 다르니, 디자인 비율(390:844)을 유지하며 fit.
+    */
+    .frame {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      max-width: calc(100vh * (390 / 844));
+      overflow: hidden;
+      background: #fff;
+    }
+
+    @supports (height: 100svh) {
+      .frame {
+        height: 100svh;
+        max-width: calc(100svh * (390 / 844));
+      }
+    }
+
+    /* 긴 캔버스 무대(레이어가 겹쳐지는 곳) */
+    .stage {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      transform: translateY(0);
+      will-change: transform;
+    }
+
+    /* 레이어: 전부 '캔버스 전체 크기' PNG라서 (0,0)에 겹치기만 하면 됨 */
+    .layer {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      object-position: top center;
+
+      opacity: 0;
+      transform: translateY(18px);
+      transition:
+        opacity 900ms cubic-bezier(.22, .61, .36, 1),
+        transform 900ms cubic-bezier(.22, .61, .36, 1);
+      will-change: opacity, transform;
+      pointer-events: none;
+      user-select: none;
+      -webkit-user-drag: none;
+    }
+
+    .layer.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* 스크롤 길이를 만들어주는 투명 스페이서 */
+    .spacer {
+      width: 100%;
+      background: #fff;
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- 보이는 프레임 -->
+  <div class="wrap">
+    <div class="frame" id="frame">
+      <div class="stage" id="stage">
+
+        <!-- P1 -->
+        <img class="layer" data-start="0" src="assets/tx_p101.png" alt="">
+        <img class="layer" data-start="70" src="assets/st_p1_01.png" alt="">
+        <img class="layer" data-start="140" src="assets/mt_leeseo.png" alt="">
+        <img class="layer" data-start="210" src="assets/tx_hsp1.png" alt="">
+        <img class="layer" data-start="280" src="assets/st_p1_02.png" alt="">
+        <img class="layer" data-start="350" src="assets/mt_lhs.png" alt="">
+        <img class="layer" data-start="420" src="assets/mt_hyunddeo.png" alt="">
+        <img class="layer" data-start="490" src="assets/mt_ddeoddeo.png" alt="">
+        <img class="layer" data-start="560" src="assets/tx_twenty.png" alt="">
+        <img class="layer" data-start="630" src="assets/mt_monkey.png" alt="">
+        <img class="layer" data-start="700" src="assets/mt_babytiger.png" alt="">
+        <img class="layer" data-start="770" src="assets/tx_bdp1.png" alt="">
+        <img class="layer" data-start="820" src="assets/mt_babypig.png" alt="">
+        <img class="layer" data-start="860" src="assets/st_cupcake.png" alt="">
+
+        <!-- P2~ -->
+        <img class="layer" data-start="980" src="assets/tx_celebrate.png" alt="">
+        <img class="layer" data-start="1080" src="assets/tx_letter.png" alt="">
+        <img class="layer" data-start="1180" src="assets/tx_talk1.png" alt="">
+        <img class="layer" data-start="1280" src="assets/tx_her.png" alt="">
+        <img class="layer" data-start="1380" src="assets/tx_bd.png" alt="">
+        <img class="layer" data-start="1480" src="assets/tx_talk2.png" alt="">
+        <img class="layer" data-start="1580" src="assets/tx_stepsimple.png" alt="">
+        <img class="layer" data-start="1680" src="assets/st_step.png" alt="">
+        <img class="layer" data-start="1780" src="assets/tx_step.png" alt="">
+        <img class="layer" data-start="1880" src="assets/st_pick.png" alt="">
+        <img class="layer" data-start="1980" src="assets/st_wal.png" alt="">
+        <img class="layer" data-start="2080" src="assets/tx_cf.png" alt="">
+        <img class="layer" data-start="2180" src="assets/tx_end01.png" alt="">
+        <img class="layer" data-start="2280" src="assets/tx_end02.png" alt="">
+        <img class="layer" data-start="2380" src="assets/button.png" alt="">
+
+      </div>
+    </div>
+  </div>
+
+  <!-- 스크롤 공간(정확히 끝에서 멈추도록 계산됨) -->
+  <div class="wrap">
+    <div class="spacer" id="spacer"></div>
+  </div>
+
+  <script>
+    /***********************
+     * ✅ 원본 레이아웃(캔버스) 고정 값
+     ***********************/
+    const CANVAS_W = 390;
+    const CANVAS_H = 2912;
+
+    /***********************
+     * ✅ 레이어 등장 타이밍 튜닝(여기만 건드리면 체감 바로 바뀜)
+     ***********************/
+    const REVEAL_AT = 0.60; // 화면 높이의 몇 % 지점에서 트리거할지 (0.55~0.70 추천)
+    const LEAD = 120;       // 다음 요소 미리 띄우기 (80~200 추천)
+
+    /***********************
+     * DOM
+     ***********************/
+    const frame = document.getElementById('frame');
+    const stage = document.getElementById('stage');
+    const spacer = document.getElementById('spacer');
+    const layers = Array.from(document.querySelectorAll('.layer'));
+
+    // ✅ 끝에서 정확히 멈추게 하는 핵심 값
+    let MAX_TRANSLATE = 0;
+
+    function layout() {
+      const frameW = frame.clientWidth;
+      const frameH = frame.clientHeight;
+
+      // 캔버스(390x2912)를 폭 기준으로 스케일한 stage 높이
+      const scaledStageH = frameW * (CANVAS_H / CANVAS_W);
+      stage.style.height = scaledStageH + 'px';
+
+      // stage가 위로 올라갈 수 있는 최대 거리(끝)
+      MAX_TRANSLATE = Math.max(0, scaledStageH - frameH);
+
+      // ✅ 스크롤 길이 = MAX_TRANSLATE (끝에서 여백 없이 딱 멈춤)
+      spacer.style.height = Math.max(0, Math.floor(MAX_TRANSLATE)) + 'px';
+    }
+
+    function updateScroll() {
+      const y = window.scrollY || 0;
+
+      // ✅ 끝에서 더 내려가지 않게 clamp
+      const translateY = Math.min(y, MAX_TRANSLATE);
+      stage.style.transform = `translateY(${-translateY}px)`;
+
+      // 레이어 등장 계산
+      const frameW = frame.clientWidth;
+      const scale = frameW / CANVAS_W;
+
+      // ✅ 화면 하단 기준이 아니라 "화면 중간 지점" 기준으로 등장시켜
+      // 잘린 채로 뜨는 느낌 + 뒤쪽 공백을 동시에 줄임
+      const revealY = (translateY + frame.clientHeight * REVEAL_AT) / scale;
+      const triggerY = revealY + LEAD;
+
+      for (const img of layers) {
+        const start = Number(img.dataset.start || 0);
+        if (start <= triggerY) img.classList.add('show');
+      }
+    }
+
+    window.addEventListener('resize', () => {
+      layout();
+      updateScroll();
+    });
+
+    window.addEventListener('scroll', updateScroll, { passive: true });
+
+    // 캔버스 높이를 고정했으므로 이미지 로드 대기 없이 바로 실행
+    layout();
+    updateScroll();
+  </script>
+</body>
+
+</html>
