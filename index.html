@@ -4,225 +4,205 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>A Sequence</title>
+  <title>Prologue</title>
   <style>
     html,
     body {
       margin: 0;
-      padding: 0;
-      width: 100%;
-      height: 100%;
-      overflow: hidden;
-      /* 스크롤 포기 */
-      background: #000;
-      -webkit-font-smoothing: antialiased;
-      user-select: none;
-      -webkit-user-select: none;
-      -webkit-tap-highlight-color: transparent;
-      touch-action: manipulation;
+      background: #fff;
+      overflow-x: hidden;
     }
 
-    /* 화면을 390x844 비율로 "꽉 차게(cover)" */
-    #viewport {
-      position: fixed;
-      inset: 0;
-      background: #000;
-      overflow: hidden;
+    /* 중앙 정렬 */
+    .wrap {
+      width: 100vw;
+      display: flex;
+      justify-content: center;
+      background: #fff;
     }
 
-    /* 캔버스는 화면 전체, 내부는 DPR 스케일 */
-    canvas {
-      position: absolute;
-      inset: 0;
+    /*
+      "처음 로드시" 딱 1화면(844px 기준 디자인)을 보여주는 프레임.
+      실제 화면은 기기마다 다르니, 디자인 비율(390:844)을 유지하며 fit.
+    */
+    .frame {
+      position: relative;
       width: 100vw;
       height: 100vh;
-      display: block;
+      max-width: calc(100vh * (390 / 844));
+      overflow: hidden;
+      background: #fff;
     }
 
-    #loading {
-      position: fixed;
-      inset: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: #000;
-      color: #fff;
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-      font-size: 14px;
-      z-index: 10;
-      transition: opacity 250ms ease;
+    @supports (height: 100svh) {
+      .frame {
+        height: 100svh;
+        max-width: calc(100svh * (390 / 844));
+      }
     }
 
-    #loading.hide {
-      opacity: 0;
-      pointer-events: none;
-    }
-
-    #hint {
+    /* 긴 캔버스 무대(레이어가 겹쳐지는 곳) */
+    .stage {
       position: absolute;
-      left: 0;
-      bottom: max(24px, env(safe-area-inset-bottom));
+      inset: 0;
       width: 100%;
-      text-align: center;
-      color: rgba(255, 255, 255, 0.7);
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-      font-size: 12px;
-      letter-spacing: 0.2px;
-      opacity: 0;
-      transition: opacity 350ms ease;
-      pointer-events: none;
-      z-index: 5;
+      transform: translateY(0);
+      will-change: transform;
     }
 
-    #hint.show {
+    /* 레이어: 전부 '캔버스 전체 크기' PNG라서 (0,0)에 겹치기만 하면 됨 */
+    .layer {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      object-position: top center;
+
+      opacity: 0;
+      transform: translateY(18px);
+      transition:
+        opacity 900ms cubic-bezier(.22, .61, .36, 1),
+        transform 900ms cubic-bezier(.22, .61, .36, 1);
+      will-change: opacity, transform;
+      pointer-events: none;
+      user-select: none;
+      -webkit-user-drag: none;
+    }
+
+    .layer.show {
       opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* 스크롤 길이를 만들어주는 투명 스페이서 */
+    .spacer {
+      width: 100%;
+      background: #fff;
     }
   </style>
 </head>
 
 <body>
-  <div id="loading">Loading…</div>
 
-  <div id="viewport">
-    <!-- 누적 합성(배경) -->
-    <canvas id="base"></canvas>
-    <!-- 페이드 인(상단) -->
-    <canvas id="fade"></canvas>
+  <!-- 보이는 프레임 -->
+  <div class="wrap">
+    <div class="frame" id="frame">
+      <div class="stage" id="stage">
 
-    <div id="hint">탭해서 다음으로</div>
+        <!-- P1 -->
+        <img class="layer" data-start="0" src="assets/tx_p101.png" alt="">
+        <img class="layer" data-start="70" src="assets/st_p1_01.png" alt="">
+        <img class="layer" data-start="140" src="assets/mt_leeseo.png" alt="">
+        <img class="layer" data-start="210" src="assets/tx_hsp1.png" alt="">
+        <img class="layer" data-start="280" src="assets/st_p1_02.png" alt="">
+        <img class="layer" data-start="350" src="assets/mt_lhs.png" alt="">
+        <img class="layer" data-start="420" src="assets/mt_hyunddeo.png" alt="">
+        <img class="layer" data-start="490" src="assets/mt_ddeoddeo.png" alt="">
+        <img class="layer" data-start="560" src="assets/tx_twenty.png" alt="">
+        <img class="layer" data-start="630" src="assets/mt_monkey.png" alt="">
+        <img class="layer" data-start="700" src="assets/mt_babytiger.png" alt="">
+        <img class="layer" data-start="770" src="assets/tx_bdp1.png" alt="">
+        <img class="layer" data-start="820" src="assets/mt_babypig.png" alt="">
+        <img class="layer" data-start="860" src="assets/st_cupcake.png" alt="">
+
+        <!-- P2~ -->
+        <img class="layer" data-start="980" src="assets/tx_celebrate.png" alt="">
+        <img class="layer" data-start="1080" src="assets/tx_letter.png" alt="">
+        <img class="layer" data-start="1180" src="assets/tx_talk1.png" alt="">
+        <img class="layer" data-start="1280" src="assets/tx_her.png" alt="">
+        <img class="layer" data-start="1380" src="assets/tx_bd.png" alt="">
+        <img class="layer" data-start="1480" src="assets/tx_talk2.png" alt="">
+        <img class="layer" data-start="1580" src="assets/tx_stepsimple.png" alt="">
+        <img class="layer" data-start="1680" src="assets/st_step.png" alt="">
+        <img class="layer" data-start="1780" src="assets/tx_step.png" alt="">
+        <img class="layer" data-start="1880" src="assets/st_pick.png" alt="">
+        <img class="layer" data-start="1980" src="assets/st_wal.png" alt="">
+        <img class="layer" data-start="2080" src="assets/tx_cf.png" alt="">
+        <img class="layer" data-start="2180" src="assets/tx_end01.png" alt="">
+        <img class="layer" data-start="2280" src="assets/tx_end02.png" alt="">
+        <img class="layer" data-start="2380" src="assets/button.png" alt="">
+
+      </div>
+    </div>
+  </div>
+
+  <!-- 스크롤 공간(정확히 끝에서 멈추도록 계산됨) -->
+  <div class="wrap">
+    <div class="spacer" id="spacer"></div>
   </div>
 
   <script>
-    const A_SEQ = [
-      "assets/a1.webp", "assets/a2.webp", "assets/a3.webp", "assets/a4.webp", "assets/a5.webp", "assets/a6.webp",
-      "assets/a7.webp", "assets/a8.webp", "assets/a9.webp", "assets/a10.webp", "assets/a11.webp", "assets/a12.webp", "assets/a13.webp"
-    ];
+    /***********************
+     * ✅ 원본 레이아웃(캔버스) 고정 값
+     ***********************/
+    const CANVAS_W = 390;
+    const CANVAS_H = 2912;
 
-    const FADE_MS = 600;
-    const DPR_CAP = 2;
+    /***********************
+     * ✅ 레이어 등장 타이밍 튜닝(여기만 건드리면 체감 바로 바뀜)
+     ***********************/
+    const REVEAL_AT = 0.60; // 화면 높이의 몇 % 지점에서 트리거할지 (0.55~0.70 추천)
+    const LEAD = 120;       // 다음 요소 미리 띄우기 (80~200 추천)
 
-    const loading = document.getElementById("loading");
-    const hint = document.getElementById("hint");
-    const base = document.getElementById("base");
-    const fade = document.getElementById("fade");
-    const bctx = base.getContext("2d", { alpha: false });
-    const fctx = fade.getContext("2d");
+    /***********************
+     * DOM
+     ***********************/
+    const frame = document.getElementById('frame');
+    const stage = document.getElementById('stage');
+    const spacer = document.getElementById('spacer');
+    const layers = Array.from(document.querySelectorAll('.layer'));
 
-    let currentIdx = 0;
-    let isTransitioning = false;
+    // ✅ 끝에서 정확히 멈추게 하는 핵심 값
+    let MAX_TRANSLATE = 0;
 
-    function resizeCanvases() {
-      const dpr = Math.min(window.devicePixelRatio || 1, DPR_CAP);
-      const w = window.innerWidth * dpr;
-      const h = window.innerHeight * dpr;
-      base.width = w; base.height = h;
-      fade.width = w; fade.height = h;
+    function layout() {
+      const frameW = frame.clientWidth;
+      const frameH = frame.clientHeight;
 
-      bctx.fillStyle = "#000";
-      bctx.fillRect(0, 0, w, h);
+      // 캔버스(390x2912)를 폭 기준으로 스케일한 stage 높이
+      const scaledStageH = frameW * (CANVAS_H / CANVAS_W);
+      stage.style.height = scaledStageH + 'px';
 
-      // 리사이즈 시 현재까지의 상태를 유지하려면 복잡해지므로, 
-      // 현재 인덱스의 이미지를 다시 그려주는 정도로 처리
-      if (currentIdx >= 0) {
-        renderCurrentState();
+      // stage가 위로 올라갈 수 있는 최대 거리(끝)
+      MAX_TRANSLATE = Math.max(0, scaledStageH - frameH);
+
+      // ✅ 스크롤 길이 = MAX_TRANSLATE (끝에서 여백 없이 딱 멈춤)
+      spacer.style.height = Math.max(0, Math.floor(MAX_TRANSLATE)) + 'px';
+    }
+
+    function updateScroll() {
+      const y = window.scrollY || 0;
+
+      // ✅ 끝에서 더 내려가지 않게 clamp
+      const translateY = Math.min(y, MAX_TRANSLATE);
+      stage.style.transform = `translateY(${-translateY}px)`;
+
+      // 레이어 등장 계산
+      const frameW = frame.clientWidth;
+      const scale = frameW / CANVAS_W;
+
+      // ✅ 화면 하단 기준이 아니라 "화면 중간 지점" 기준으로 등장시켜
+      // 잘린 채로 뜨는 느낌 + 뒤쪽 공백을 동시에 줄임
+      const revealY = (translateY + frame.clientHeight * REVEAL_AT) / scale;
+      const triggerY = revealY + LEAD;
+
+      for (const img of layers) {
+        const start = Number(img.dataset.start || 0);
+        if (start <= triggerY) img.classList.add('show');
       }
     }
 
-    function drawCover(ctx, img, cw, ch) {
-      if (!img) return;
-      const iw = img.naturalWidth || img.width;
-      const ih = img.naturalHeight || img.height;
-      const scale = Math.max(cw / iw, ch / ih);
-      const sw = cw / scale;
-      const sh = ch / scale;
-      const sx = (iw - sw) / 2;
-      const sy = (ih - sh) / 2;
-      ctx.drawImage(img, sx, sy, sw, sh, 0, 0, cw, ch);
-    }
-
-    const imageCache = {};
-    async function loadImage(src) {
-      if (imageCache[src]) return imageCache[src];
-      return new Promise((resolve) => {
-        const img = new Image();
-        img.onload = () => {
-          imageCache[src] = img;
-          resolve(img);
-        };
-        img.onerror = () => resolve(null);
-        img.src = src;
-      });
-    }
-
-    async function renderCurrentState() {
-      const img = await loadImage(A_SEQ[currentIdx]);
-      if (img) drawCover(bctx, img, base.width, base.height);
-    }
-
-    async function advance() {
-      if (isTransitioning) return;
-
-      if (currentIdx >= A_SEQ.length - 1) {
-        location.href = "b.html";
-        return;
-      }
-
-      isTransitioning = true;
-      hint.classList.remove("show");
-
-      const nextIdx = currentIdx + 1;
-      const nextImg = await loadImage(A_SEQ[nextIdx]);
-
-      if (!nextImg) {
-        currentIdx = nextIdx;
-        isTransitioning = false;
-        return;
-      }
-
-      const cw = base.width, ch = base.height;
-      const t0 = performance.now();
-
-      return new Promise((resolve) => {
-        function tick(now) {
-          const p = Math.min(1, (now - t0) / FADE_MS);
-
-          fctx.clearRect(0, 0, cw, ch);
-          fctx.globalAlpha = p;
-          drawCover(fctx, nextImg, cw, ch);
-
-          if (p < 1) {
-            requestAnimationFrame(tick);
-          } else {
-            // Commit to base
-            bctx.globalAlpha = 1;
-            drawCover(bctx, nextImg, cw, ch);
-            fctx.clearRect(0, 0, cw, ch);
-
-            currentIdx = nextIdx;
-            isTransitioning = false;
-            hint.classList.add("show");
-            resolve();
-          }
-        }
-        requestAnimationFrame(tick);
-      });
-    }
-
-    window.addEventListener("click", advance);
-
-    window.addEventListener("load", async () => {
-      resizeCanvases();
-      const firstImg = await loadImage(A_SEQ[0]);
-      if (firstImg) {
-        drawCover(bctx, firstImg, base.width, base.height);
-      }
-      loading.classList.add("hide");
-      setTimeout(() => hint.classList.add("show"), 1000);
+    window.addEventListener('resize', () => {
+      layout();
+      updateScroll();
     });
 
-    window.addEventListener("resize", () => {
-      resizeCanvases();
-    });
+    window.addEventListener('scroll', updateScroll, { passive: true });
+
+    // 캔버스 높이를 고정했으므로 이미지 로드 대기 없이 바로 실행
+    layout();
+    updateScroll();
   </script>
 </body>
 
