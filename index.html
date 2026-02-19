@@ -11,8 +11,45 @@
       margin: 0;
       background: #fff;
       overflow-x: hidden;
-      /* 끝에서 튕기는 느낌을 줄여 더 정확한 느낌을 줌 */
       overscroll-behavior-y: none;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* 로딩 인디케이터 */
+    #loading-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 10000;
+      background: #fff;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      transition: opacity 800ms ease-out, visibility 800ms;
+    }
+
+    #loading-overlay.fade-out {
+      opacity: 0;
+      visibility: hidden;
+    }
+
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 3px solid rgba(0, 0, 0, 0.1);
+      border-top: 3px solid #000;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% {
+        transform: rotate(0deg);
+      }
+
+      100% {
+        transform: rotate(360deg);
+      }
     }
 
     /* 중앙 정렬 */
@@ -23,9 +60,6 @@
       background: #fff;
     }
 
-    /*
-      "처음 로드시" 딱 1화면(844px 기준 디자인)을 보여주는 프레임.
-    */
     .frame {
       position: relative;
       width: 100vw;
@@ -40,7 +74,6 @@
       }
     }
 
-    /* 긴 캔버스 무대(레이어가 겹쳐지는 곳) */
     .stage {
       position: absolute;
       inset: 0;
@@ -49,7 +82,6 @@
       will-change: transform;
     }
 
-    /* 레이어: 전부 '캔버스 전체 크기' PNG라서 (0,0)에 겹치기만 하면 됨 */
     .layer {
       position: absolute;
       inset: 0;
@@ -59,30 +91,36 @@
       object-position: top center;
 
       opacity: 0;
-      /* 조금 더 아래에서 올라오게 하여 더 부드러운 느낌 */
-      transform: translateY(30px);
-      /* transition bezier 곡선을 더 부드럽게 조정 */
+      /* 메모리 최적화: 보이지 않을 때는 아예 렌더링 트레에서 제외 */
+      visibility: hidden;
+      transform: translate3d(0, 30px, 0);
       transition:
         opacity 1200ms cubic-bezier(0.25, 0.1, 0.25, 1),
         transform 1200ms cubic-bezier(0.25, 0.1, 0.25, 1);
-      will-change: opacity, transform;
+
       pointer-events: none;
       user-select: none;
       -webkit-user-drag: none;
+
+      /* 이미지 선명도 보정 */
+      image-rendering: -webkit-optimize-contrast;
+      backface-visibility: hidden;
     }
 
-    /* 버튼 레이어만 클릭 가능하게 설정 */
-    .layer[src*="button.png"] {
+    /* 버튼 레이어만 클릭 가능 */
+    .layer[src*="button_go.webp"] {
       pointer-events: auto;
       cursor: pointer;
     }
 
     .layer.show {
       opacity: 1;
+      visibility: visible;
       transform: translateY(0);
+      /* 나타날 때만 will-change 적용하여 메모리 절약 */
+      will-change: opacity, transform;
     }
 
-    /* 스크롤 길이를 만들어주는 투명 스페이서 */
     .spacer {
       width: 100%;
       background: #fff;
@@ -91,97 +129,119 @@
 </head>
 
 <body>
+  <!-- 로딩 화면 -->
+  <div id="loading-overlay">
+    <div class="spinner"></div>
+  </div>
 
-  <!-- 보이는 프레임 -->
   <div class="wrap" id="main-wrap">
     <div class="frame" id="frame">
       <div class="stage" id="stage">
+        <!-- A-Series: a1-a13 -->
+        <img class="layer" data-start="0" src="assets/a1.webp" alt="">
+        <img class="layer" data-start="70" src="assets/a2.webp" alt="">
+        <img class="layer" data-start="140" src="assets/a3.webp" alt="">
+        <img class="layer" data-start="210" src="assets/a4.webp" alt="">
+        <img class="layer" data-start="280" src="assets/a5.webp" alt="">
+        <img class="layer" data-start="350" src="assets/a6.webp" alt="">
+        <img class="layer" data-start="420" src="assets/a7.webp" alt="">
+        <img class="layer" data-start="490" src="assets/a8.webp" alt="">
+        <img class="layer" data-start="560" src="assets/a9.webp" alt="">
+        <img class="layer" data-start="630" src="assets/a10.webp" alt="">
+        <img class="layer" data-start="700" src="assets/a11.webp" alt="">
+        <img class="layer" data-start="770" src="assets/a12.webp" alt="">
+        <img class="layer" data-start="840" src="assets/a13.webp" alt="">
 
-        <!-- P1 -->
-        <img class="layer" data-start="0" src="assets/tx_p101.png" alt="">
-        <img class="layer" data-start="70" src="assets/st_p1_01.png" alt="">
-        <img class="layer" data-start="140" src="assets/mt_leeseo.png" alt="">
-        <img class="layer" data-start="210" src="assets/tx_hsp1.png" alt="">
-        <img class="layer" data-start="280" src="assets/st_p1_02.png" alt="">
-        <img class="layer" data-start="350" src="assets/mt_lhs.png" alt="">
-        <img class="layer" data-start="420" src="assets/mt_hyunddeo.png" alt="">
-        <img class="layer" data-start="490" src="assets/mt_ddeoddeo.png" alt="">
-        <img class="layer" data-start="560" src="assets/tx_twenty.png" alt="">
-        <img class="layer" data-start="630" src="assets/mt_monkey.png" alt="">
-        <img class="layer" data-start="700" src="assets/mt_babytiger.png" alt="">
-        <img class="layer" data-start="770" src="assets/tx_bdp1.png" alt="">
-        <img class="layer" data-start="820" src="assets/mt_babypig.png" alt="">
-        <img class="layer" data-start="860" src="assets/st_cupcake.png" alt="">
+        <!-- B-Series: b1-b14 -->
+        <img class="layer" data-start="950" src="assets/b1.webp" alt="">
+        <img class="layer" data-start="1030" src="assets/b2.webp" alt="">
+        <img class="layer" data-start="1110" src="assets/b3.webp" alt="">
+        <img class="layer" data-start="1190" src="assets/b4.webp" alt="">
+        <img class="layer" data-start="1270" src="assets/b5.webp" alt="">
+        <img class="layer" data-start="1350" src="assets/b6.webp" alt="">
+        <img class="layer" data-start="1430" src="assets/b7.webp" alt="">
+        <img class="layer" data-start="1510" src="assets/b8.webp" alt="">
+        <img class="layer" data-start="1590" src="assets/b9.webp" alt="">
+        <img class="layer" data-start="1670" src="assets/b10.webp" alt="">
+        <img class="layer" data-start="1750" src="assets/b11.webp" alt="">
+        <img class="layer" data-start="1830" src="assets/b12.webp" alt="">
+        <img class="layer" data-start="1910" src="assets/b13.webp" alt="">
+        <img class="layer" data-start="1990" src="assets/b14.webp" alt="">
 
-        <!-- P2~ -->
-        <img class="layer" data-start="980" src="assets/tx_celebrate.png" alt="">
-        <img class="layer" data-start="1080" src="assets/tx_letter.png" alt="">
-        <img class="layer" data-start="1180" src="assets/tx_talk1.png" alt="">
-        <img class="layer" data-start="1280" src="assets/tx_her.png" alt="">
-        <img class="layer" data-start="1380" src="assets/tx_bd.png" alt="">
-        <img class="layer" data-start="1480" src="assets/tx_talk2.png" alt="">
-        <img class="layer" data-start="1580" src="assets/tx_stepsimple.png" alt="">
-        <img class="layer" data-start="1680" src="assets/st_step.png" alt="">
-        <img class="layer" data-start="1780" src="assets/tx_step.png" alt="">
-        <img class="layer" data-start="1880" src="assets/st_pick.png" alt="">
-        <img class="layer" data-start="1980" src="assets/st_wal.png" alt="">
-        <img class="layer" data-start="2080" src="assets/tx_cf.png" alt="">
-        <img class="layer" data-start="2180" src="assets/tx_end01.png" alt="">
-        <img class="layer" data-start="2280" src="assets/tx_end02.png" alt="">
-        <img class="layer" data-start="2380" src="assets/button.png" alt="">
-
+        <!-- Final Button -->
+        <img class="layer" data-start="2100" src="assets/button_go.webp" alt="">
       </div>
     </div>
   </div>
 
-  <!-- 스크롤 공간 -->
   <div class="spacer" id="spacer"></div>
 
   <script>
-    /***********************
-     * ✅ 원본 레이아웃(캔버스) 고정 값
-     ***********************/
     const CANVAS_W = 390;
-    const CANVAS_H = 2912;
+    const CANVAS_H = 2912; // 원본 캔버스 높이
+    const REVEAL_AT = 0.8;
+    const LEAD = 50;
 
-    /***********************
-     * ✅ 레이어 등장 타이밍 튜닝
-     ***********************/
-    const REVEAL_AT = 0.75; // 화면 하단에서 조금 더 일찍 트리거 (부드러운 등장을 위해)
-    const LEAD = 50;        // 미리 등장 시키는 정도 조정
-
-    /***********************
-     * DOM
-     ***********************/
     const frame = document.getElementById('frame');
     const stage = document.getElementById('stage');
     const spacer = document.getElementById('spacer');
     const layers = Array.from(document.querySelectorAll('.layer'));
+    const loadingOverlay = document.getElementById('loading-overlay');
 
     let MAX_TRANSLATE = 0;
+    let viewHeight = 0;
+
+    // 로딩 처리
+    function hideLoading() {
+      if (!loadingOverlay.classList.contains('fade-out')) {
+        loadingOverlay.classList.add('fade-out');
+      }
+    }
+
+    window.addEventListener('load', () => {
+      // 리소스 로드 완료 후 약간의 여유를 두고 해제
+      setTimeout(hideLoading, 300);
+    });
 
     function layout() {
-      const frameW = frame.clientWidth;
-      const frameH = frame.clientHeight;
+      // 모바일 브라우저 뷰포트 계산 안정화
+      const frameW = frame.getBoundingClientRect().width;
+      viewHeight = window.innerHeight; // frame.clientHeight 대신 실제 윈도우 높이 사용 고려
 
-      // 캔버스(390x2912)를 폭 기준으로 스케일한 stage 높이
       const scaledStageH = frameW * (CANVAS_H / CANVAS_W);
       stage.style.height = scaledStageH + 'px';
 
-      // stage가 위로 올라갈 수 있는 최대 거리
-      MAX_TRANSLATE = Math.max(0, scaledStageH - frameH);
+      MAX_TRANSLATE = Math.max(0, scaledStageH - viewHeight);
+      // spacer 높이를 조금 더 여유있게 설정하여 바닥 걸림 방지
+      spacer.style.height = (Math.ceil(MAX_TRANSLATE) + viewHeight + 2) + 'px';
 
-      // ✅ 스크롤 길이 설정: 딱 마지막까지 도달하도록
-      spacer.style.height = (Math.ceil(MAX_TRANSLATE) + frameH) + 'px';
-
-      // frame을 고정시키기 위해 wrap에 스타일 적용 (필요시)
-      document.getElementById('main-wrap').style.position = 'fixed';
-      document.getElementById('main-wrap').style.top = '0';
+      const wrap = document.getElementById('main-wrap');
+      wrap.style.position = 'fixed';
+      wrap.style.top = '0';
+      wrap.style.left = '0';
+      wrap.style.width = '100%';
     }
 
-    // 버튼 클릭 이벤트 리스너 추가
+    function updateScroll() {
+      const y = window.pageYOffset || document.documentElement.scrollTop;
+      const translateY = Math.min(y, MAX_TRANSLATE);
+      // force hardware acceleration with translate3d
+      stage.style.transform = `translate3d(0, ${-translateY}px, 0)`;
+
+      const frameW = frame.clientWidth;
+      const scale = frameW / CANVAS_W;
+      const currentRevealY = (translateY + viewHeight * REVEAL_AT) / scale;
+
+      for (const img of layers) {
+        const start = Number(img.dataset.start || 0);
+        if (start <= currentRevealY + LEAD) {
+          img.classList.add('show');
+        }
+      }
+    }
+
     function initEvents() {
-      const btn = document.querySelector('.layer[src*="button.png"]');
+      const btn = document.querySelector('.layer[src*="button_go.webp"]');
       if (btn) {
         btn.addEventListener('click', () => {
           window.location.href = 'sticker.html';
@@ -189,40 +249,34 @@
       }
     }
 
-    function updateScroll() {
-      const y = window.scrollY || 0;
-
-      // ✅ 끝에서 정확히 멈추도록 clamp
-      const translateY = Math.min(y, MAX_TRANSLATE);
-      stage.style.transform = `translateY(${-translateY}px)`;
-
-      // 레이어 등장 계산
-      const frameW = frame.clientWidth;
-      const scale = frameW / CANVAS_W;
-
-      // 등장 트리거 지점 계산 (현재 스크롤 위치 + 화면 높이의 일정 비율)
-      const currentRevealY = (translateY + frame.clientHeight * REVEAL_AT) / scale;
-
-      for (const img of layers) {
-        const start = Number(img.dataset.start || 0);
-        // data-start 값보다 트리거 지점이 더 아래로 내려가면 표시
-        if (start <= currentRevealY + LEAD) {
-          img.classList.add('show');
-        }
-      }
-    }
-
+    // Resize 시 스로틀링 및 주소창 변화 대응
+    let resizeTimer;
+    let lastWidth = window.innerWidth;
     window.addEventListener('resize', () => {
-      layout();
-      updateScroll();
+      // 가로 너비가 변한 경우에만 레이아웃 재계산 (주소창 숨김/노출로 인한 세로 변화 무시)
+      if (window.innerWidth === lastWidth) return;
+      lastWidth = window.innerWidth;
+
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(() => {
+        layout();
+        updateScroll();
+      }, 100);
     });
 
     window.addEventListener('scroll', updateScroll, { passive: true });
 
-    // 초기 실행
-    layout();
-    updateScroll();
-    initEvents();
+    // 초기 실행 시점에 약간의 지연을 주어 브라우저 렌더링 안정화 후 계산
+    window.addEventListener('DOMContentLoaded', () => {
+      requestAnimationFrame(() => {
+        layout();
+        updateScroll();
+        initEvents();
+      });
+    });
+
+    // 혹시 모를 로딩 멈춤 방지 (1.5초 후 자동 해제)
+    setTimeout(hideLoading, 1500);
   </script>
 </body>
 
