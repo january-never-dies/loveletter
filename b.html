@@ -1,0 +1,255 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>B Scroll</title>
+
+  <style>
+    html, body {
+      margin: 0; padding: 0;
+      overflow-x: hidden;
+      background: #000;
+      -webkit-font-smoothing: antialiased;
+      user-select: none; -webkit-user-select: none;
+      -webkit-tap-highlight-color: transparent;
+      overscroll-behavior-y: none;
+    }
+
+    /* 뷰포트는 고정, 스크롤은 spacer로 만든다 */
+    #frame {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100vh;
+      overflow: hidden;
+      background: #000;
+      touch-action: pan-y;
+    }
+
+    #stage {
+      position: absolute;
+      inset: 0;
+      transform: translate3d(0,0,0);
+    }
+
+    .shot {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;        /* 390x844 꽉 차는 느낌 */
+      object-position: center;  /* 필요하면 top center로 바꿔도 됨 */
+      opacity: 0;
+      transition: opacity 500ms ease;
+      -webkit-user-drag: none;
+      pointer-events: none;
+      backface-visibility: hidden;
+    }
+
+    #goHit {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+    }
+    #goHit.enabled {
+      pointer-events: auto;
+      cursor: pointer;
+    }
+
+    #spacer {
+      width: 100%;
+      height: 200vh;
+      background: #000;
+    }
+
+    #topHint {
+      position: fixed;
+      top: max(14px, env(safe-area-inset-top));
+      left: 0;
+      width: 100%;
+      text-align: center;
+      color: rgba(255,255,255,0.6);
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      font-size: 12px;
+      z-index: 5;
+      pointer-events: none;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="topHint">스크롤해서 GO! 버튼을 찾아요</div>
+
+  <div id="frame">
+    <div id="stage">
+      <img id="imgA" class="shot" alt="">
+      <img id="imgB" class="shot" alt="">
+      <div id="goHit" aria-label="Go"></div>
+    </div>
+  </div>
+
+  <div id="spacer"></div>
+
+  <script>
+    // B 시퀀스 + 마지막 버튼
+    const SEQ = [
+      { start: 0,    src: "assets/b1.webp" },
+      { start: 160,  src: "assets/b2.webp" },
+      { start: 320,  src: "assets/b3.webp" },
+      { start: 480,  src: "assets/b4.webp" },
+      { start: 640,  src: "assets/b5.webp" },
+      { start: 800,  src: "assets/b6.webp" },
+      { start: 960,  src: "assets/b7.webp" },
+      { start: 1120, src: "assets/b8.webp" },
+      { start: 1280, src: "assets/b9.webp" },
+      { start: 1440, src: "assets/b10.webp" },
+      { start: 1600, src: "assets/b11.webp" },
+      { start: 1760, src: "assets/b12.webp" },
+      { start: 1920, src: "assets/b13.webp" },
+      { start: 2080, src: "assets/b14.webp" },
+      { start: 2240, src: "assets/button_go.webp", isButton: true }
+    ];
+
+    // 스크롤 길이(가상 캔버스 높이). 길게 잡을수록 “찾는 느낌”이 나지만 너무 길면 피로.
+    const VIRTUAL_H = 2800;
+    const REVEAL_AT = 0.85;
+
+    const frame = document.getElementById("frame");
+    const stage = document.getElementById("stage");
+    const spacer = document.getElementById("spacer");
+    const imgA = document.getElementById("imgA");
+    const imgB = document.getElementById("imgB");
+    const goHit = document.getElementById("goHit");
+
+    const BLANK = "data:image/gif;base64,R0lGODlhAQABAAAAACw=";
+
+    let viewH = window.innerHeight;
+    let maxTranslate = 0;
+
+    let frontIsA = true;
+    let currentIdx = -1;
+
+    function layout() {
+      viewH = window.innerHeight;
+      // spacer가 문서 스크롤 길이를 만든다
+      maxTranslate = Math.max(0, VIRTUAL_H - viewH);
+      spacer.style.height = (maxTranslate + viewH + 2) + "px";
+    }
+
+    function findIndex(revealY) {
+      let lo = 0, hi = SEQ.length - 1, ans = 0;
+      while (lo <= hi) {
+        const mid = (lo + hi) >> 1;
+        if (SEQ[mid].start <= revealY) { ans = mid; lo = mid + 1; }
+        else { hi = mid - 1; }
+      }
+      return ans;
+    }
+
+    function setSrc(img, src) {
+      if (img.dataset.src === src) return;
+      img.style.opacity = "0";
+      img.src = BLANK;
+      img.dataset.src = src;
+      requestAnimationFrame(() => { img.src = src; });
+    }
+
+    // 다음 한 장만 프리로드
+    let pre = new Image();
+    function preloadNext(idx) {
+      const next = SEQ[idx + 1];
+      if (!next) return;
+      pre = new Image();
+      pre.decoding = "async";
+      pre.loading = "eager";
+      pre.src = next.src;
+    }
+
+    function render(idx) {
+      if (idx === currentIdx) return;
+      currentIdx = idx;
+
+      const cur = SEQ[idx];
+      const next = SEQ[idx + 1];
+
+      const front = frontIsA ? imgA : imgB;
+      const back  = frontIsA ? imgB : imgA;
+
+      setSrc(front, cur.src);
+      setSrc(back, next ? next.src : cur.src);
+
+      // 버튼일 때만 클릭 활성화
+      if (cur.isButton) goHit.classList.add("enabled");
+      else goHit.classList.remove("enabled");
+
+      // 초기 상태
+      front.style.opacity = "1";
+      back.style.opacity = "0";
+
+      preloadNext(idx);
+    }
+
+    function update() {
+      const y = window.pageYOffset || document.documentElement.scrollTop;
+      const t = Math.min(y, maxTranslate);
+
+      // stage는 고정이지만, 효과용으로 translate3d 유지
+      stage.style.transform = `translate3d(0, 0, 0)`;
+
+      const revealY = t + viewH * REVEAL_AT;
+      const idx = findIndex(revealY);
+      render(idx);
+
+      const cur = SEQ[idx];
+      const next = SEQ[idx + 1];
+      const front = frontIsA ? imgA : imgB;
+      const back  = frontIsA ? imgB : imgA;
+
+      if (next) {
+        const span = Math.max(1, (next.start - cur.start));
+        const p = Math.min(1, Math.max(0, (revealY - cur.start) / span));
+        back.style.opacity = String(p);
+        front.style.opacity = String(1 - p);
+
+        if (p > 0.92) {
+          frontIsA = !frontIsA;
+          render(idx + 1);
+        }
+      } else {
+        front.style.opacity = "1";
+        back.style.opacity = "0";
+      }
+    }
+
+    window.addEventListener("scroll", update, { passive: true });
+
+    // iOS 주소창 변화로 resize가 자주 나서, 너비 변화 위주로만
+    let lastW = window.innerWidth;
+    window.addEventListener("resize", () => {
+      if (window.innerWidth !== lastW) {
+        lastW = window.innerWidth;
+        layout();
+        update();
+      }
+    });
+
+    goHit.addEventListener("click", (e) => {
+      if (!goHit.classList.contains("enabled")) return;
+      e.preventDefault();
+      location.href = "sticker.html";
+    });
+
+    window.addEventListener("load", () => {
+      layout();
+      // 첫 화면
+      setSrc(imgA, SEQ[0].src);
+      imgA.style.opacity = "1";
+      setSrc(imgB, SEQ[1]?.src ?? SEQ[0].src);
+      imgB.style.opacity = "0";
+      preloadNext(0);
+      update();
+    });
+  </script>
+</body>
+</html>
