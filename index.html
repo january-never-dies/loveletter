@@ -1,22 +1,23 @@
 <!doctype html>
 <html lang="ko">
-
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>Prologue</title>
 
   <style>
-    html,
-    body {
+    html, body {
       margin: 0;
       padding: 0;
-      overflow: hidden;
-      background: #fff;
-      -webkit-font-smoothing: antialiased;
       width: 100%;
       height: 100%;
+      overflow: hidden; /* 스크롤 포기 */
+      background: #fff;
+      -webkit-font-smoothing: antialiased;
       user-select: none;
+      -webkit-user-select: none;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
     }
 
     #loading-overlay {
@@ -31,7 +32,6 @@
       font-size: 14px;
       transition: opacity 300ms ease;
     }
-
     #loading-overlay.hide {
       opacity: 0;
       pointer-events: none;
@@ -45,57 +45,48 @@
       overflow: hidden;
     }
 
-    .scene {
+    /* 화면에 실제로 존재하는 이미지는 1장만 */
+    #shot {
       position: absolute;
-      top: 0;
-      left: 0;
+      inset: 0;
       width: 100%;
       height: 100%;
-      transition: opacity 800ms ease;
-      display: none;
-    }
-
-    .scene.active {
-      display: block;
-      opacity: 1;
-    }
-
-    .layer {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: auto;
+      object-fit: contain;
+      object-position: top center;
       opacity: 0;
-      transform: translate3d(0, 20px, 0);
-      transition: opacity 1000ms ease, transform 1000ms ease;
-      pointer-events: none;
+      transition: opacity 650ms ease;
+      backface-visibility: hidden;
+      -webkit-user-drag: none;
+      pointer-events: none; /* 마지막에만 버튼 오버레이로 클릭 받음 */
     }
-
-    .layer.show {
+    #shot.show {
       opacity: 1;
-      transform: translate3d(0, 0, 0);
     }
 
-    #next-hint {
+    /* 탭 안내 */
+    #hint {
       position: absolute;
-      bottom: 40px;
       left: 0;
+      bottom: 40px;
       width: 100%;
       text-align: center;
-      font-family: system-ui, sans-serif;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
       color: #aaa;
       font-size: 12px;
       opacity: 0;
-      transition: opacity 500ms ease;
+      transition: opacity 400ms ease;
       pointer-events: none;
     }
+    #hint.show { opacity: 1; }
 
-    #next-hint.show {
-      opacity: 1;
+    /* 마지막 버튼: 이미지 위에 투명 클릭영역 */
+    #goHitArea {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      pointer-events: none;
     }
-
-    #goBtn {
+    #goHitArea.enabled {
       pointer-events: auto;
       cursor: pointer;
     }
@@ -103,125 +94,154 @@
 </head>
 
 <body>
-
   <div id="loading-overlay">Loading…</div>
 
   <div id="container">
-    <!-- Scene A -->
-    <div id="scene-a" class="scene active">
-      <img class="layer" data-src="assets/a1.webp">
-      <img class="layer" data-src="assets/a2.webp">
-      <img class="layer" data-src="assets/a3.webp">
-      <img class="layer" data-src="assets/a4.webp">
-      <img class="layer" data-src="assets/a5.webp">
-      <img class="layer" data-src="assets/a6.webp">
-      <img class="layer" data-src="assets/a7.webp">
-      <img class="layer" data-src="assets/a8.webp">
-      <img class="layer" data-src="assets/a9.webp">
-      <img class="layer" data-src="assets/a10.webp">
-      <img class="layer" data-src="assets/a11.webp">
-      <img class="layer" data-src="assets/a12.webp">
-      <img class="layer" data-src="assets/a13.webp">
-      <div id="next-hint">탭해서 다음으로</div>
-    </div>
-
-    <!-- Scene B -->
-    <div id="scene-b" class="scene">
-      <img class="layer" data-src="assets/b1.webp">
-      <img class="layer" data-src="assets/b2.webp">
-      <img class="layer" data-src="assets/b3.webp">
-      <img class="layer" data-src="assets/b4.webp">
-      <img class="layer" data-src="assets/b5.webp">
-      <img class="layer" data-src="assets/b6.webp">
-      <img class="layer" data-src="assets/b7.webp">
-      <img class="layer" data-src="assets/b8.webp">
-      <img class="layer" data-src="assets/b9.webp">
-      <img class="layer" data-src="assets/b10.webp">
-      <img class="layer" data-src="assets/b11.webp">
-      <img class="layer" data-src="assets/b12.webp">
-      <img class="layer" data-src="assets/b13.webp">
-      <img class="layer" data-src="assets/b14.webp">
-      <img id="goBtn" class="layer" data-src="assets/button_go.webp">
-    </div>
+    <img id="shot" alt="">
+    <div id="goHitArea" aria-label="Go"></div>
+    <div id="hint">탭해서 다음으로</div>
   </div>
 
   <script>
-    const INTERVAL = 600; // 이미지 간격 (ms)
-    let currentScene = 'a';
-    let isTransitioning = false;
-    let sceneAComplete = false;
+    /** =========================
+     *  설정
+     * ========================= */
+    const INTERVAL = 650;       // 한 장 넘어가는 기본 간격(ms)
+    const EXTRA_AFTER_LOAD = 80; // 로드 직후 약간 안정화
+    const BLANK = "data:image/gif;base64,R0lGODlhAQABAAAAACw="; // iOS 메모리 릴리즈 유도용
 
-    const sceneA = document.getElementById('scene-a');
-    const sceneB = document.getElementById('scene-b');
-    const layersA = [...sceneA.querySelectorAll('.layer')];
-    const layersB = [...sceneB.querySelectorAll('.layer')];
-    const hint = document.getElementById('next-hint');
-    const loading = document.getElementById('loading-overlay');
+    // A는 a1~a13, B는 b1~b14 + 마지막 버튼 이미지
+    const SEQ_A = [
+      "assets/a1.webp","assets/a2.webp","assets/a3.webp","assets/a4.webp","assets/a5.webp","assets/a6.webp",
+      "assets/a7.webp","assets/a8.webp","assets/a9.webp","assets/a10.webp","assets/a11.webp","assets/a12.webp","assets/a13.webp"
+    ];
 
-    async function preloadImages(imgs) {
-      const promises = imgs.map(img => {
-        return new Promise(resolve => {
-          img.onload = resolve;
-          img.onerror = resolve;
-          img.src = img.dataset.src;
+    const SEQ_B = [
+      "assets/b1.webp","assets/b2.webp","assets/b3.webp","assets/b4.webp","assets/b5.webp","assets/b6.webp",
+      "assets/b7.webp","assets/b8.webp","assets/b9.webp","assets/b10.webp","assets/b11.webp","assets/b12.webp","assets/b13.webp","assets/b14.webp",
+      "assets/button_go.webp"
+    ];
+
+    /** =========================
+     *  DOM
+     * ========================= */
+    const loading = document.getElementById("loading-overlay");
+    const shot = document.getElementById("shot");
+    const hint = document.getElementById("hint");
+    const goHit = document.getElementById("goHitArea");
+
+    /** =========================
+     *  상태
+     * ========================= */
+    let scene = "A"; // "A" | "WAIT" | "B" | "DONE"
+    let playing = false;
+
+    // 다음 이미지 한 장만 프리로드(메모리 최소)
+    let pre = new Image();
+    pre.decoding = "async";
+
+    function preloadOne(src) {
+      // 새 Image로 갈아끼워 이전 참조를 끊음
+      pre = new Image();
+      pre.decoding = "async";
+      pre.loading = "eager";
+      pre.src = src;
+    }
+
+    function setShotSrc(src) {
+      return new Promise((resolve) => {
+        // 같은 src면 바로 resolve
+        if (shot.dataset.src === src && shot.complete) return resolve();
+
+        shot.classList.remove("show");
+
+        // iOS에서 이전 디코딩 메모리 압박 줄이기: BLANK로 한번 끊고 교체
+        shot.src = BLANK;
+        shot.dataset.src = src;
+
+        // 다음 프레임에 실제 src 주입
+        requestAnimationFrame(() => {
+          shot.onload = () => resolve();
+          shot.onerror = () => resolve(); // 에러여도 진행
+          shot.src = src;
         });
       });
-      await Promise.all(promises);
     }
 
-    function showSequential(layers, callback) {
-      let i = 0;
-      function showNext() {
-        if (i < layers.length) {
-          layers[i].classList.add('show');
-          i++;
-          setTimeout(showNext, INTERVAL);
-        } else if (callback) {
-          callback();
+    async function playSequence(seq, { showHintAtEnd = false, enableGoAtEnd = false } = {}) {
+      playing = true;
+      hint.classList.remove("show");
+      goHit.classList.remove("enabled");
+
+      for (let i = 0; i < seq.length; i++) {
+        const src = seq[i];
+        const next = seq[i + 1];
+
+        if (next) preloadOne(next);
+
+        await setShotSrc(src);
+        // 보여주기
+        requestAnimationFrame(() => shot.classList.add("show"));
+
+        // 마지막이거나 enableGoAtEnd면 클릭 영역 처리
+        const isLast = (i === seq.length - 1);
+        if (enableGoAtEnd && isLast) {
+          goHit.classList.add("enabled");
         }
+
+        // 마지막이면 루프 끝
+        if (isLast) break;
+
+        // 다음 프레임까지 대기
+        await new Promise(r => setTimeout(r, INTERVAL + EXTRA_AFTER_LOAD));
       }
-      showNext();
+
+      playing = false;
+
+      if (showHintAtEnd) {
+        scene = "WAIT";
+        hint.classList.add("show");
+      } else if (enableGoAtEnd) {
+        scene = "DONE";
+      }
     }
 
-    function goToSceneB() {
-      if (isTransitioning || currentScene === 'b') return;
-      isTransitioning = true;
-
-      sceneA.style.opacity = '0';
-      setTimeout(() => {
-        sceneA.classList.remove('active');
-        sceneB.classList.add('active');
-        currentScene = 'b';
-        showSequential(layersB);
-        isTransitioning = false;
-      }, 800);
-    }
-
-    document.body.addEventListener('click', () => {
-      if (currentScene === 'a' && sceneAComplete) {
-        goToSceneB();
+    // 탭 이벤트: A 끝난 뒤에만 B로 넘어감
+    document.body.addEventListener("click", () => {
+      if (scene === "WAIT" && !playing) {
+        scene = "B";
+        playSequence(SEQ_B, { enableGoAtEnd: true });
       }
+    }, { passive: true });
+
+    // 마지막 버튼 탭 (button_go.webp가 떠 있을 때만 enabled)
+    goHit.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (!goHit.classList.contains("enabled")) return;
+      location.href = "sticker.html";
     });
 
-    document.getElementById('goBtn').onclick = (e) => {
-      e.stopPropagation();
-      location.href = 'sticker.html';
-    };
+    // 시작: A 자동재생
+    window.addEventListener("load", async () => {
+      // 첫 장만 빠르게 로드해서 로딩 닫기
+      await setShotSrc(SEQ_A[0]);
+      shot.classList.add("show");
+      loading.classList.add("hide");
 
-    window.addEventListener('load', async () => {
-      // 모든 이미지 미리 로드 (메모리 이슈 방지를 위해 순차 혹은 한꺼번에 로드)
-      await preloadImages([...layersA, ...layersB]);
-
-      setTimeout(() => {
-        loading.classList.add('hide');
-        showSequential(layersA, () => {
-          sceneAComplete = true;
-          hint.classList.add('show');
-        });
-      }, 500);
+      // 0번은 이미 보여줬으니 1번부터 이어서(혹시 자연스럽게 하려면 0부터 다시 돌려도 됨)
+      const restA = SEQ_A.slice(1);
+      if (restA.length) {
+        // 첫 장 이후부터 재생
+        await new Promise(r => setTimeout(r, 250));
+        // a2~a13 재생 후 탭 힌트
+        await playSequence(restA, { showHintAtEnd: true });
+      } else {
+        // A가 1장뿐인 경우
+        scene = "WAIT";
+        hint.classList.add("show");
+      }
     });
   </script>
-
 </body>
-
 </html>
