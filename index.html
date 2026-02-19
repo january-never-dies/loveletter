@@ -12,7 +12,7 @@
       background: #fff;
       overflow-x: hidden;
       /* 끝에서 튕기는 느낌을 줄여 더 정확한 느낌을 줌 */
-      overscroll-behavior-y: none;
+      overscroll-behavior-y: auto;
     }
 
     /* 중앙 정렬 */
@@ -45,7 +45,7 @@
       position: absolute;
       inset: 0;
       width: 100%;
-      transform: translateY(0);
+      transform: translate3d(0, 0, 0);
       will-change: transform;
     }
 
@@ -65,7 +65,8 @@
       transition:
         opacity 1200ms cubic-bezier(0.25, 0.1, 0.25, 1),
         transform 1200ms cubic-bezier(0.25, 0.1, 0.25, 1);
-      will-change: opacity, transform;
+
+      /* 메모리 최적화를 위해 will-change 제거 */
       pointer-events: none;
       user-select: none;
       -webkit-user-drag: none;
@@ -159,24 +160,33 @@
     const layers = Array.from(document.querySelectorAll('.layer'));
 
     let MAX_TRANSLATE = 0;
+    let lastWidth = 0;
 
     function layout() {
       const frameW = frame.clientWidth;
       const frameH = frame.clientHeight;
 
-      // 캔버스(390x2912)를 폭 기준으로 스케일한 stage 높이
-      const scaledStageH = frameW * (CANVAS_H / CANVAS_W);
-      stage.style.height = scaledStageH + 'px';
+      // 너비가 크게 변한 경우에만 스페이서 높이 재계산 (주소창 무시용)
+      const forceLayout = Math.abs(lastWidth - frameW) > 5;
+      if (forceLayout || MAX_TRANSLATE === 0) {
+        lastWidth = frameW;
 
-      // stage가 위로 올라갈 수 있는 최대 거리
-      MAX_TRANSLATE = Math.max(0, scaledStageH - frameH);
+        // 캔버스(390x2912)를 폭 기준으로 스케일한 stage 높이
+        const scaledStageH = frameW * (CANVAS_H / CANVAS_W);
+        stage.style.height = scaledStageH + 'px';
 
-      // ✅ 스크롤 길이 설정: 딱 마지막까지 도달하도록
-      spacer.style.height = (Math.ceil(MAX_TRANSLATE) + frameH) + 'px';
+        // stage가 위로 올라갈 수 있는 최대 거리
+        MAX_TRANSLATE = Math.max(0, scaledStageH - frameH);
 
-      // frame을 고정시키기 위해 wrap에 스타일 적용 (필요시)
-      document.getElementById('main-wrap').style.position = 'fixed';
-      document.getElementById('main-wrap').style.top = '0';
+        // ✅ 스크롤 길이 설정: 딱 마지막까지 도달하도록
+        spacer.style.height = (Math.ceil(MAX_TRANSLATE) + frameH) + 'px';
+      }
+
+      // frame을 고정시키기 위해 wrap에 스타일 적용
+      const mainWrap = document.getElementById('main-wrap');
+      mainWrap.style.position = 'fixed';
+      mainWrap.style.top = '0';
+      mainWrap.style.width = '100%';
     }
 
     // 버튼 클릭 이벤트 리스너 추가
@@ -189,26 +199,32 @@
       }
     }
 
+    let isTicking = false;
     function updateScroll() {
-      const y = window.scrollY || 0;
+      if (!isTicking) {
+        requestAnimationFrame(() => {
+          const y = window.scrollY || 0;
 
-      // ✅ 끝에서 정확히 멈추도록 clamp
-      const translateY = Math.min(y, MAX_TRANSLATE);
-      stage.style.transform = `translateY(${-translateY}px)`;
+          // ✅ 끝에서 정확히 멈추도록 clamp
+          const translateY = Math.min(y, MAX_TRANSLATE);
+          stage.style.transform = `translate3d(0, ${-translateY}px, 0)`;
 
-      // 레이어 등장 계산
-      const frameW = frame.clientWidth;
-      const scale = frameW / CANVAS_W;
+          // 레이어 등장 계산
+          const frameW = frame.clientWidth;
+          const scale = frameW / CANVAS_W;
 
-      // 등장 트리거 지점 계산 (현재 스크롤 위치 + 화면 높이의 일정 비율)
-      const currentRevealY = (translateY + frame.clientHeight * REVEAL_AT) / scale;
+          // 등장 트리거 지점 계산 (현재 스크롤 위치 + 화면 높이의 일정 비율)
+          const currentRevealY = (translateY + frame.clientHeight * REVEAL_AT) / scale;
 
-      for (const img of layers) {
-        const start = Number(img.dataset.start || 0);
-        // data-start 값보다 트리거 지점이 더 아래로 내려가면 표시
-        if (start <= currentRevealY + LEAD) {
-          img.classList.add('show');
-        }
+          for (const img of layers) {
+            const start = Number(img.dataset.start || 0);
+            if (start <= currentRevealY + LEAD) {
+              img.classList.add('show');
+            }
+          }
+          isTicking = false;
+        });
+        isTicking = true;
       }
     }
 
@@ -217,6 +233,7 @@
       updateScroll();
     });
 
+    // passive: true로 성능 확보
     window.addEventListener('scroll', updateScroll, { passive: true });
 
     // 초기 실행
