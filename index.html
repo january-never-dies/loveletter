@@ -17,7 +17,6 @@
       -webkit-font-smoothing: antialiased;
     }
 
-    /* 로딩 */
     #loading-overlay {
       position: fixed;
       inset: 0;
@@ -61,12 +60,12 @@
     }
 
     .layer {
+      /* ★ 수정: 캔버스 전체 너비에 맞게, 높이는 비율로 */
       position: absolute;
-      inset: 0;
+      top: 0;
+      left: 0;
       width: 100%;
-      height: 100vh;
-      object-fit: contain;
-      object-position: top center;
+      height: auto;
 
       opacity: 0;
       display: none;
@@ -94,7 +93,6 @@
       cursor: pointer;
     }
 
-    /* 스크롤 길이 생성용 */
     #spacer {
       width: 100%;
       height: 100vh;
@@ -111,23 +109,23 @@
       <div id="stage">
 
         <!-- A -->
-        <img class="layer" data-start="0" data-src="assets/a1.webp">
-        <img class="layer" data-start="70" data-src="assets/a2.webp">
-        <img class="layer" data-start="140" data-src="assets/a3.webp">
-        <img class="layer" data-start="210" data-src="assets/a4.webp">
-        <img class="layer" data-start="280" data-src="assets/a5.webp">
-        <img class="layer" data-start="350" data-src="assets/a6.webp">
-        <img class="layer" data-start="420" data-src="assets/a7.webp">
-        <img class="layer" data-start="490" data-src="assets/a8.webp">
-        <img class="layer" data-start="560" data-src="assets/a9.webp">
-        <img class="layer" data-start="630" data-src="assets/a10.webp">
-        <img class="layer" data-start="700" data-src="assets/a11.webp">
-        <img class="layer" data-start="770" data-src="assets/a12.webp">
-        <img class="layer" data-start="840" data-src="assets/a13.webp">
-        <img class="layer" data-start="910" data-src="assets/a14.webp">
+        <img class="layer" data-start="0"    data-src="assets/a1.webp">
+        <img class="layer" data-start="70"   data-src="assets/a2.webp">
+        <img class="layer" data-start="140"  data-src="assets/a3.webp">
+        <img class="layer" data-start="210"  data-src="assets/a4.webp">
+        <img class="layer" data-start="280"  data-src="assets/a5.webp">
+        <img class="layer" data-start="350"  data-src="assets/a6.webp">
+        <img class="layer" data-start="420"  data-src="assets/a7.webp">
+        <img class="layer" data-start="490"  data-src="assets/a8.webp">
+        <img class="layer" data-start="560"  data-src="assets/a9.webp">
+        <img class="layer" data-start="630"  data-src="assets/a10.webp">
+        <img class="layer" data-start="700"  data-src="assets/a11.webp">
+        <img class="layer" data-start="770"  data-src="assets/a12.webp">
+        <img class="layer" data-start="840"  data-src="assets/a13.webp">
+        <img class="layer" data-start="910"  data-src="assets/a14.webp">
 
         <!-- B -->
-        <img class="layer" data-start="980" data-src="assets/b1.webp">
+        <img class="layer" data-start="980"  data-src="assets/b1.webp">
         <img class="layer" data-start="1060" data-src="assets/b2.webp">
         <img class="layer" data-start="1140" data-src="assets/b3.webp">
         <img class="layer" data-start="1220" data-src="assets/b4.webp">
@@ -153,16 +151,16 @@
     /* ===== 설정 ===== */
     const CANVAS_W = 390;
     const CANVAS_H = 2912;
-    const REVEAL_AT = 0.8;
-    const LEAD = 50;
-    const PRELOAD_AHEAD = 400;
-    const UNLOAD_BEHIND = 1400;
+    const REVEAL_AT = 0.6;       // ★ 0.8 → 0.6 : 더 일찍 트리거
+    const LEAD = 80;             // ★ 50 → 80  : 더 여유 있게 표시
+    const PRELOAD_AHEAD = 600;   // ★ 400 → 600: 미리 더 많이 로드
+    const UNLOAD_BEHIND = 3000;  // ★ 1400 → 3000: iOS 크래시 방지, 덜 언로드
 
     /* ===== 요소 ===== */
-    const frame = document.getElementById('frame');
-    const stage = document.getElementById('stage');
-    const spacer = document.getElementById('spacer');
-    const layers = [...document.querySelectorAll('.layer')];
+    const frame   = document.getElementById('frame');
+    const stage   = document.getElementById('stage');
+    const spacer  = document.getElementById('spacer');
+    const layers  = [...document.querySelectorAll('.layer')];
     const loading = document.getElementById('loading-overlay');
 
     let viewH = window.innerHeight;
@@ -174,7 +172,6 @@
       const scaledH = w * (CANVAS_H / CANVAS_W);
 
       stage.style.height = scaledH + 'px';
-
       maxTranslate = Math.max(0, scaledH - viewH);
       spacer.style.height = (maxTranslate + viewH + 2) + 'px';
     }
@@ -189,10 +186,10 @@
     function unload(img) {
       if (!img.dataset.loaded) return;
       if (img.id === 'goBtn') return;
-      img.removeAttribute('src');
-      img.dataset.loaded = '';
+      // ★ src 제거 대신 display:none만 처리 → iOS Safari 재로드 크래시 방지
       img.classList.remove('show');
       img.style.display = 'none';
+      // loaded 플래그는 유지(재다운로드 없음)
     }
 
     /* ===== 스크롤 ===== */
@@ -201,7 +198,7 @@
       const t = Math.min(y, maxTranslate);
       stage.style.transform = `translate3d(0, ${-t}px, 0)`;
 
-      const scale = frame.clientWidth / CANVAS_W;
+      const scale  = frame.clientWidth / CANVAS_W;
       const revealY = (t + viewH * REVEAL_AT) / scale;
 
       for (const img of layers) {
@@ -213,8 +210,7 @@
 
         if (start <= revealY + LEAD && img.dataset.loaded) {
           img.style.display = 'block';
-          // force reflow for transition
-          img.offsetHeight;
+          img.offsetHeight; // force reflow
           img.classList.add('show');
         }
 
@@ -248,5 +244,4 @@
   </script>
 
 </body>
-
 </html>
