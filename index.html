@@ -30,15 +30,13 @@
       position: relative;
       width: 100vw;
       height: 100vh;
-      max-width: calc(100vh * (390 / 844));
       overflow: hidden;
       background: #fff;
     }
 
-    @supports (height: 100svh) {
+    @supports (height: 100dvh) {
       .frame {
-        height: 100svh;
-        max-width: calc(100svh * (390 / 844));
+        height: 100dvh;
       }
     }
 
