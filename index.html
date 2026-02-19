@@ -1,69 +1,60 @@
 <!doctype html>
 <html lang="ko">
-
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>Prologue</title>
+
   <style>
-    html,
-    body {
+    html, body {
       margin: 0;
-      background: #fff;
+      padding: 0;
       overflow-x: hidden;
+      background: #fff;
       overscroll-behavior-y: none;
       -webkit-font-smoothing: antialiased;
     }
 
-    /* 로딩 인디케이터 */
+    /* 로딩 */
     #loading-overlay {
       position: fixed;
       inset: 0;
-      z-index: 10000;
+      z-index: 9999;
       background: #fff;
       display: flex;
       align-items: center;
       justify-content: center;
-      transition: opacity 350ms ease;
-      opacity: 1;
-      pointer-events: auto;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      font-size: 14px;
+      transition: opacity 300ms ease;
     }
-
-    #loading-overlay.fade-out {
+    #loading-overlay.hide {
       opacity: 0;
       pointer-events: none;
     }
 
-    .loading-text {
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
-      font-size: 14px;
-      color: #111;
-      letter-spacing: 0.2px;
-    }
-
-    /* 메인 레이아웃 */
     #main-wrap {
       width: 100%;
-      height: 100%;
       background: #fff;
     }
 
     #frame {
-      position: relative;
+      position: fixed;
+      top: 0;
+      left: 0;
       width: 100%;
       height: 100vh;
       overflow: hidden;
       background: #fff;
       touch-action: pan-y;
-      -webkit-overflow-scrolling: touch;
     }
 
     #stage {
       position: absolute;
-      left: 0;
       top: 0;
+      left: 0;
       width: 100%;
-      transform: translate3d(0, 0, 0);
+      transform: translate3d(0,0,0);
     }
 
     .layer {
@@ -75,272 +66,170 @@
       object-position: top center;
 
       opacity: 0;
-      /* 메모리 최적화: 보이지 않을 때는 아예 렌더링 트레에서 제외 */
       visibility: hidden;
       transform: translate3d(0, 30px, 0);
+
       transition:
-        opacity 1200ms cubic-bezier(0.25, 0.1, 0.25, 1),
-        transform 1200ms cubic-bezier(0.25, 0.1, 0.25, 1);
+        opacity 1000ms ease,
+        transform 1000ms ease;
 
       pointer-events: none;
       user-select: none;
       -webkit-user-drag: none;
-
-      /* 이미지 선명도 보정 */
-      image-rendering: -webkit-optimize-contrast;
       backface-visibility: hidden;
-    }
-
-    /* 버튼 레이어만 클릭 가능 */
-    #goBtn {
-      pointer-events: auto;
-      cursor: pointer;
     }
 
     .layer.show {
       opacity: 1;
       visibility: visible;
-      transform: translateY(0);
-      /* 나타날 때만 will-change 적용하여 메모리 절약 */
-      will-change: opacity, transform;
+      transform: translate3d(0,0,0);
     }
 
-    .spacer {
+    #goBtn {
+      pointer-events: auto;
+      cursor: pointer;
+    }
+
+    /* 스크롤 길이 생성용 */
+    #spacer {
       width: 100%;
-      background: #fff;
+      height: 100vh;
     }
   </style>
 </head>
 
 <body>
-  <!-- 로딩 오버레이 -->
-  <div id="loading-overlay">
-    <div class="loading-text">Loading…</div>
-  </div>
 
-  <div id="main-wrap">
-    <div id="frame">
-      <div id="stage">
-        <!-- ✅ iOS 크래시 방지: src 제거, data-src로 지연 로드 -->
-        <img class="layer" data-start="0" data-src="assets/a1.webp" alt="" loading="lazy" decoding="async"
-          fetchpriority="low">
-        <img class="layer" data-start="70" data-src="assets/a2.webp" alt="" loading="lazy" decoding="async"
-          fetchpriority="low">
-        <img class="layer" data-start="140" data-src="assets/a3.webp" alt="" loading="lazy" decoding="async"
-          fetchpriority="low">
-        <img class="layer" data-start="210" data-src="assets/a4.webp" alt="" loading="lazy" decoding="async"
-          fetchpriority="low">
-        <img class="layer" data-start="280" data-src="assets/a5.webp" alt="" loading="lazy" decoding="async"
-          fetchpriority="low">
-        <img class="layer" data-start="350" data-src="assets/a6.webp" alt="" loading="lazy" decoding="async"
-          fetchpriority="low">
-        <img class="layer" data-start="420" data-src="assets/a7.webp" alt="" loading="lazy" decoding="async"
-          fetchpriority="low">
-        <img class="layer" data-start="490" data-src="assets/a8.webp" alt="" loading="lazy" decoding="async"
-          fetchpriority="low">
-        <img class="layer" data-start="560" data-src="assets/a9.webp" alt="" loading="lazy" decoding="async"
-          fetchpriority="low">
-        <img class="layer" data-start="630" data-src="assets/a10.webp" alt="" loading="lazy" decoding="async"
-          fetchpriority="low">
-        <img class="layer" data-start="700" data-src="assets/a11.webp" alt="" loading="lazy" decoding="async"
-          fetchpriority="low">
-        <img class="layer" data-start="770" data-src="assets/a12.webp" alt="" loading="lazy" decoding="async"
-          fetchpriority="low">
-        <img class="layer" data-start="840" data-src="assets/a13.webp" alt="" loading="lazy" decoding="async"
-          fetchpriority="low">
-        <img class="layer" data-start="910" data-src="assets/a14.webp" alt="" loading="lazy" decoding="async"
-          fetchpriority="low">
+<div id="loading-overlay">Loading…</div>
 
-        <img class="layer" data-start="980" data-src="assets/b1.webp" alt="" loading="lazy" decoding="async"
-          fetchpriority="low">
-        <img class="layer" data-start="1060" data-src="assets/b2.webp" alt="" loading="lazy" decoding="async"
-          fetchpriority="low">
-        <img class="layer" data-start="1140" data-src="assets/b3.webp" alt="" loading="lazy" decoding="async"
-          fetchpriority="low">
-        <img class="layer" data-start="1220" data-src="assets/b4.webp" alt="" loading="lazy" decoding="async"
-          fetchpriority="low">
-        <img class="layer" data-start="1300" data-src="assets/b5.webp" alt="" loading="lazy" decoding="async"
-          fetchpriority="low">
-        <img class="layer" data-start="1380" data-src="assets/b6.webp" alt="" loading="lazy" decoding="async"
-          fetchpriority="low">
-        <img class="layer" data-start="1460" data-src="assets/b7.webp" alt="" loading="lazy" decoding="async"
-          fetchpriority="low">
-        <img class="layer" data-start="1540" data-src="assets/b8.webp" alt="" loading="lazy" decoding="async"
-          fetchpriority="low">
-        <img class="layer" data-start="1620" data-src="assets/b9.webp" alt="" loading="lazy" decoding="async"
-          fetchpriority="low">
-        <img class="layer" data-start="1700" data-src="assets/b10.webp" alt="" loading="lazy" decoding="async"
-          fetchpriority="low">
-        <img class="layer" data-start="1780" data-src="assets/b11.webp" alt="" loading="lazy" decoding="async"
-          fetchpriority="low">
-        <img class="layer" data-start="1860" data-src="assets/b12.webp" alt="" loading="lazy" decoding="async"
-          fetchpriority="low">
-        <img class="layer" data-start="1910" data-src="assets/b13.webp" alt="" loading="lazy" decoding="async"
-          fetchpriority="low">
-        <img class="layer" data-start="1990" data-src="assets/b14.webp" alt="" loading="lazy" decoding="async"
-          fetchpriority="low">
+<div id="main-wrap">
+  <div id="frame">
+    <div id="stage">
 
-        <img id="goBtn" class="layer" data-start="2100" data-src="assets/button_go.webp" alt="" loading="lazy"
-          decoding="async" fetchpriority="low">
-      </div>
+      <!-- A -->
+      <img class="layer" data-start="0" data-src="assets/a1.webp">
+      <img class="layer" data-start="70" data-src="assets/a2.webp">
+      <img class="layer" data-start="140" data-src="assets/a3.webp">
+      <img class="layer" data-start="210" data-src="assets/a4.webp">
+      <img class="layer" data-start="280" data-src="assets/a5.webp">
+      <img class="layer" data-start="350" data-src="assets/a6.webp">
+      <img class="layer" data-start="420" data-src="assets/a7.webp">
+      <img class="layer" data-start="490" data-src="assets/a8.webp">
+      <img class="layer" data-start="560" data-src="assets/a9.webp">
+      <img class="layer" data-start="630" data-src="assets/a10.webp">
+      <img class="layer" data-start="700" data-src="assets/a11.webp">
+      <img class="layer" data-start="770" data-src="assets/a12.webp">
+      <img class="layer" data-start="840" data-src="assets/a13.webp">
+      <img class="layer" data-start="910" data-src="assets/a14.webp">
+
+      <!-- B -->
+      <img class="layer" data-start="980" data-src="assets/b1.webp">
+      <img class="layer" data-start="1060" data-src="assets/b2.webp">
+      <img class="layer" data-start="1140" data-src="assets/b3.webp">
+      <img class="layer" data-start="1220" data-src="assets/b4.webp">
+      <img class="layer" data-start="1300" data-src="assets/b5.webp">
+      <img class="layer" data-start="1380" data-src="assets/b6.webp">
+      <img class="layer" data-start="1460" data-src="assets/b7.webp">
+      <img class="layer" data-start="1540" data-src="assets/b8.webp">
+      <img class="layer" data-start="1620" data-src="assets/b9.webp">
+      <img class="layer" data-start="1700" data-src="assets/b10.webp">
+      <img class="layer" data-start="1780" data-src="assets/b11.webp">
+      <img class="layer" data-start="1860" data-src="assets/b12.webp">
+      <img class="layer" data-start="1910" data-src="assets/b13.webp">
+      <img class="layer" data-start="1990" data-src="assets/b14.webp">
+
+      <img id="goBtn" class="layer" data-start="2100" data-src="assets/button_go.webp">
     </div>
-
-    <div id="spacer" class="spacer"></div>
   </div>
 
-  <script>
-    const CANVAS_W = 390;
-    const CANVAS_H = 2912; // 원본 캔버스 높이
-    const REVEAL_AT = 0.8;
-    const LEAD = 50;
+  <div id="spacer"></div>
+</div>
 
-    const frame = document.getElementById('frame');
-    const stage = document.getElementById('stage');
-    const spacer = document.getElementById('spacer');
-    const layers = Array.from(document.querySelectorAll('.layer'));
-    const loadingOverlay = document.getElementById('loading-overlay');
+<script>
+/* ===== 설정 ===== */
+const CANVAS_W = 390;
+const CANVAS_H = 2912;
+const REVEAL_AT = 0.8;
+const LEAD = 50;
+const PRELOAD_AHEAD = 400;
+const UNLOAD_BEHIND = 1400;
 
-    let MAX_TRANSLATE = 0;
-    let viewHeight = 0;
+/* ===== 요소 ===== */
+const frame = document.getElementById('frame');
+const stage = document.getElementById('stage');
+const spacer = document.getElementById('spacer');
+const layers = [...document.querySelectorAll('.layer')];
+const loading = document.getElementById('loading-overlay');
 
-    // 로딩 처리
-    function hideLoading() {
-      if (!loadingOverlay.classList.contains('fade-out')) {
-        loadingOverlay.classList.add('fade-out');
-      }
-    }
+let viewH = window.innerHeight;
+let maxTranslate = 0;
 
-    window.addEventListener('load', () => {
-      // 리소스 로드 완료 후 약간의 여유를 두고 해제
-      setTimeout(hideLoading, 300);
-    });
+/* ===== 레이아웃 ===== */
+function layout() {
+  const w = frame.clientWidth;
+  const scaledH = w * (CANVAS_H / CANVAS_W);
 
-    function layout() {
-      // 모바일 브라우저 뷰포트 계산 안정화
-      const frameW = frame.getBoundingClientRect().width;
-      viewHeight = window.innerHeight; // frame.clientHeight 대신 실제 윈도우 높이 사용 고려
+  stage.style.height = scaledH + 'px';
 
-      const scaledStageH = frameW * (CANVAS_H / CANVAS_W);
-      stage.style.height = scaledStageH + 'px';
+  maxTranslate = Math.max(0, scaledH - viewH);
+  spacer.style.height = (maxTranslate + viewH + 2) + 'px';
+}
 
-      MAX_TRANSLATE = Math.max(0, scaledStageH - viewHeight);
-      // spacer 높이를 조금 더 여유있게 설정하여 바닥 걸림 방지
-      spacer.style.height = (Math.ceil(MAX_TRANSLATE) + viewHeight + 2) + 'px';
+/* ===== 이미지 관리 ===== */
+function load(img) {
+  if (img.dataset.loaded) return;
+  img.dataset.loaded = '1';
+  img.src = img.dataset.src;
+}
 
-      const wrap = document.getElementById('main-wrap');
-      wrap.style.position = 'fixed';
-      wrap.style.top = '0';
-      wrap.style.left = '0';
-      wrap.style.width = '100%';
-    }
+function unload(img) {
+  if (!img.dataset.loaded) return;
+  if (img.id === 'goBtn') return;
+  img.removeAttribute('src');
+  img.dataset.loaded = '';
+  img.classList.remove('show');
+}
 
-    function ensureLoaded(img) {
-      if (img.dataset.loaded === '1') return;
-      const src = img.dataset.src;
-      if (!src) return;
+/* ===== 스크롤 ===== */
+function update() {
+  const y = window.pageYOffset;
+  const t = Math.min(y, maxTranslate);
+  stage.style.transform = `translate3d(0, ${-t}px, 0)`;
 
-      img.dataset.loaded = '1';
-      img.src = src;
+  const scale = frame.clientWidth / CANVAS_W;
+  const revealY = (t + viewH * REVEAL_AT) / scale;
 
-      // 로드 완료 후 표시 (깜빡임/검은박스 완화)
-      img.addEventListener('load', () => {
-        img.classList.add('show');
-        img.style.visibility = 'visible';
-        img.style.opacity = '1';
-      }, { once: true });
-    }
+  for (const img of layers) {
+    const start = +img.dataset.start;
 
-    function unload(img) {
-      if (img.dataset.loaded !== '1') return;
-      // iOS 메모리 압박 완화: 너무 뒤로 지나간 이미지는 src 제거
-      img.removeAttribute('src');
-      img.dataset.loaded = '0';
-      img.classList.remove('show');
-      img.style.visibility = 'hidden';
-      img.style.opacity = '0';
-    }
+    if (start <= revealY + PRELOAD_AHEAD) load(img);
+    if (start <= revealY + LEAD && img.dataset.loaded) img.classList.add('show');
+    if (start < revealY - UNLOAD_BEHIND) unload(img);
+  }
+}
 
-    // iOS Safari 크래시 방지용: 필요할 때만 이미지 로드/디코딩
-    const PRELOAD_AHEAD = 500;   // 앞으로 미리 로드할 여유(캔버스 좌표 기준)
-    const UNLOAD_BEHIND = 1400;  // 뒤로 너무 지나간 건 언로드(캔버스 좌표 기준)
+/* ===== 이벤트 ===== */
+window.addEventListener('scroll', update, { passive: true });
 
-    function updateScroll() {
-      const y = window.pageYOffset || document.documentElement.scrollTop;
-      const translateY = Math.min(y, MAX_TRANSLATE);
-      // force hardware acceleration with translate3d
-      stage.style.transform = `translate3d(0, ${-translateY}px, 0)`;
+window.addEventListener('resize', () => {
+  const newH = window.innerHeight;
+  if (newH !== viewH) {
+    viewH = newH;
+    layout();
+    update();
+  }
+});
 
-      const frameW = frame.clientWidth;
-      const scale = frameW / CANVAS_W;
-      const currentRevealY = (translateY + viewHeight * REVEAL_AT) / scale;
+document.getElementById('goBtn').onclick = () => {
+  location.href = 'sticker.html';
+};
 
-      const showThreshold = currentRevealY + LEAD;
-      const loadThreshold = showThreshold + PRELOAD_AHEAD;
-      const unloadThreshold = currentRevealY - UNLOAD_BEHIND;
+window.addEventListener('load', () => {
+  layout();
+  update();
+  setTimeout(() => loading.classList.add('hide'), 300);
+});
+</script>
 
-      for (const img of layers) {
-        const start = Number(img.dataset.start || 0);
-
-        // 버튼은 끝까지 유지
-        const isGoBtn = img.id === 'goBtn' || (img.dataset.src || '').includes('button_go.webp');
-
-        // 가까워지면 로드
-        if (start <= loadThreshold) {
-          ensureLoaded(img);
-
-          // 이미 로드 완료된 경우, 보이는 구간이면 바로 show
-          if (start <= showThreshold && img.dataset.loaded === '1' && img.complete) {
-            img.classList.add('show');
-            img.style.visibility = 'visible';
-            img.style.opacity = '1';
-          }
-        }
-
-        // 너무 뒤로 지나간 이미지는 언로드 (버튼 제외)
-        if (!isGoBtn && start < unloadThreshold) {
-          unload(img);
-        }
-      }
-    }
-
-    function initEvents() {
-      const btn = document.querySelector('#goBtn');
-      if (btn) {
-        btn.addEventListener('click', () => {
-          window.location.href = 'sticker.html';
-        });
-      }
-    }
-
-    // Resize 시 스로틀링 및 주소창 변화 대응
-    let resizeTimer;
-    let lastWidth = window.innerWidth;
-    window.addEventListener('resize', () => {
-      // 가로 너비가 변한 경우에만 레이아웃 재계산 (주소창 숨김/노출로 인한 세로 변화 무시)
-      if (window.innerWidth === lastWidth) return;
-      lastWidth = window.innerWidth;
-
-      clearTimeout(resizeTimer);
-      resizeTimer = setTimeout(() => {
-        layout();
-        updateScroll();
-      }, 100);
-    });
-
-    window.addEventListener('scroll', updateScroll, { passive: true });
-
-    // 초기 실행 시점에 약간의 지연을 주어 브라우저 렌더링 안정화 후 계산
-    window.addEventListener('DOMContentLoaded', () => {
-      requestAnimationFrame(() => {
-        layout();
-        updateScroll();
-        initEvents();
-      });
-    });
-
-    // 혹시 모를 로딩 멈춤 방지 (1.5초 후 자동 해제)
-    setTimeout(hideLoading, 1500);
-  </script>
 </body>
-
 </html>
