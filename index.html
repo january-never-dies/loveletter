@@ -1,12 +1,14 @@
 <!doctype html>
 <html lang="ko">
+
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>Prologue</title>
 
   <style>
-    html, body {
+    html,
+    body {
       margin: 0;
       padding: 0;
       overflow-x: hidden;
@@ -28,6 +30,7 @@
       font-size: 14px;
       transition: opacity 300ms ease;
     }
+
     #loading-overlay.hide {
       opacity: 0;
       pointer-events: none;
@@ -54,19 +57,19 @@
       top: 0;
       left: 0;
       width: 100%;
-      transform: translate3d(0,0,0);
+      transform: translate3d(0, 0, 0);
     }
 
     .layer {
       position: absolute;
       inset: 0;
       width: 100%;
-      height: 100%;
+      height: 100vh;
       object-fit: contain;
       object-position: top center;
 
       opacity: 0;
-      visibility: hidden;
+      display: none;
       transform: translate3d(0, 30px, 0);
 
       transition:
@@ -76,13 +79,14 @@
       pointer-events: none;
       user-select: none;
       -webkit-user-drag: none;
-      backface-visibility: hidden;
     }
 
     .layer.show {
+      display: block;
       opacity: 1;
-      visibility: visible;
-      transform: translate3d(0,0,0);
+      transform: translate3d(0, 0, 0);
+      will-change: opacity, transform;
+      backface-visibility: hidden;
     }
 
     #goBtn {
@@ -100,136 +104,149 @@
 
 <body>
 
-<div id="loading-overlay">Loading…</div>
+  <div id="loading-overlay">Loading…</div>
 
-<div id="main-wrap">
-  <div id="frame">
-    <div id="stage">
+  <div id="main-wrap">
+    <div id="frame">
+      <div id="stage">
 
-      <!-- A -->
-      <img class="layer" data-start="0" data-src="assets/a1.webp">
-      <img class="layer" data-start="70" data-src="assets/a2.webp">
-      <img class="layer" data-start="140" data-src="assets/a3.webp">
-      <img class="layer" data-start="210" data-src="assets/a4.webp">
-      <img class="layer" data-start="280" data-src="assets/a5.webp">
-      <img class="layer" data-start="350" data-src="assets/a6.webp">
-      <img class="layer" data-start="420" data-src="assets/a7.webp">
-      <img class="layer" data-start="490" data-src="assets/a8.webp">
-      <img class="layer" data-start="560" data-src="assets/a9.webp">
-      <img class="layer" data-start="630" data-src="assets/a10.webp">
-      <img class="layer" data-start="700" data-src="assets/a11.webp">
-      <img class="layer" data-start="770" data-src="assets/a12.webp">
-      <img class="layer" data-start="840" data-src="assets/a13.webp">
-      <img class="layer" data-start="910" data-src="assets/a14.webp">
+        <!-- A -->
+        <img class="layer" data-start="0" data-src="assets/a1.webp">
+        <img class="layer" data-start="70" data-src="assets/a2.webp">
+        <img class="layer" data-start="140" data-src="assets/a3.webp">
+        <img class="layer" data-start="210" data-src="assets/a4.webp">
+        <img class="layer" data-start="280" data-src="assets/a5.webp">
+        <img class="layer" data-start="350" data-src="assets/a6.webp">
+        <img class="layer" data-start="420" data-src="assets/a7.webp">
+        <img class="layer" data-start="490" data-src="assets/a8.webp">
+        <img class="layer" data-start="560" data-src="assets/a9.webp">
+        <img class="layer" data-start="630" data-src="assets/a10.webp">
+        <img class="layer" data-start="700" data-src="assets/a11.webp">
+        <img class="layer" data-start="770" data-src="assets/a12.webp">
+        <img class="layer" data-start="840" data-src="assets/a13.webp">
+        <img class="layer" data-start="910" data-src="assets/a14.webp">
 
-      <!-- B -->
-      <img class="layer" data-start="980" data-src="assets/b1.webp">
-      <img class="layer" data-start="1060" data-src="assets/b2.webp">
-      <img class="layer" data-start="1140" data-src="assets/b3.webp">
-      <img class="layer" data-start="1220" data-src="assets/b4.webp">
-      <img class="layer" data-start="1300" data-src="assets/b5.webp">
-      <img class="layer" data-start="1380" data-src="assets/b6.webp">
-      <img class="layer" data-start="1460" data-src="assets/b7.webp">
-      <img class="layer" data-start="1540" data-src="assets/b8.webp">
-      <img class="layer" data-start="1620" data-src="assets/b9.webp">
-      <img class="layer" data-start="1700" data-src="assets/b10.webp">
-      <img class="layer" data-start="1780" data-src="assets/b11.webp">
-      <img class="layer" data-start="1860" data-src="assets/b12.webp">
-      <img class="layer" data-start="1910" data-src="assets/b13.webp">
-      <img class="layer" data-start="1990" data-src="assets/b14.webp">
+        <!-- B -->
+        <img class="layer" data-start="980" data-src="assets/b1.webp">
+        <img class="layer" data-start="1060" data-src="assets/b2.webp">
+        <img class="layer" data-start="1140" data-src="assets/b3.webp">
+        <img class="layer" data-start="1220" data-src="assets/b4.webp">
+        <img class="layer" data-start="1300" data-src="assets/b5.webp">
+        <img class="layer" data-start="1380" data-src="assets/b6.webp">
+        <img class="layer" data-start="1460" data-src="assets/b7.webp">
+        <img class="layer" data-start="1540" data-src="assets/b8.webp">
+        <img class="layer" data-start="1620" data-src="assets/b9.webp">
+        <img class="layer" data-start="1700" data-src="assets/b10.webp">
+        <img class="layer" data-start="1780" data-src="assets/b11.webp">
+        <img class="layer" data-start="1860" data-src="assets/b12.webp">
+        <img class="layer" data-start="1910" data-src="assets/b13.webp">
+        <img class="layer" data-start="1990" data-src="assets/b14.webp">
 
-      <img id="goBtn" class="layer" data-start="2100" data-src="assets/button_go.webp">
+        <img id="goBtn" class="layer" data-start="2100" data-src="assets/button_go.webp">
+      </div>
     </div>
+
+    <div id="spacer"></div>
   </div>
 
-  <div id="spacer"></div>
-</div>
+  <script>
+    /* ===== 설정 ===== */
+    const CANVAS_W = 390;
+    const CANVAS_H = 2912;
+    const REVEAL_AT = 0.8;
+    const LEAD = 50;
+    const PRELOAD_AHEAD = 400;
+    const UNLOAD_BEHIND = 1400;
 
-<script>
-/* ===== 설정 ===== */
-const CANVAS_W = 390;
-const CANVAS_H = 2912;
-const REVEAL_AT = 0.8;
-const LEAD = 50;
-const PRELOAD_AHEAD = 400;
-const UNLOAD_BEHIND = 1400;
+    /* ===== 요소 ===== */
+    const frame = document.getElementById('frame');
+    const stage = document.getElementById('stage');
+    const spacer = document.getElementById('spacer');
+    const layers = [...document.querySelectorAll('.layer')];
+    const loading = document.getElementById('loading-overlay');
 
-/* ===== 요소 ===== */
-const frame = document.getElementById('frame');
-const stage = document.getElementById('stage');
-const spacer = document.getElementById('spacer');
-const layers = [...document.querySelectorAll('.layer')];
-const loading = document.getElementById('loading-overlay');
+    let viewH = window.innerHeight;
+    let maxTranslate = 0;
 
-let viewH = window.innerHeight;
-let maxTranslate = 0;
+    /* ===== 레이아웃 ===== */
+    function layout() {
+      const w = frame.clientWidth;
+      const scaledH = w * (CANVAS_H / CANVAS_W);
 
-/* ===== 레이아웃 ===== */
-function layout() {
-  const w = frame.clientWidth;
-  const scaledH = w * (CANVAS_H / CANVAS_W);
+      stage.style.height = scaledH + 'px';
 
-  stage.style.height = scaledH + 'px';
+      maxTranslate = Math.max(0, scaledH - viewH);
+      spacer.style.height = (maxTranslate + viewH + 2) + 'px';
+    }
 
-  maxTranslate = Math.max(0, scaledH - viewH);
-  spacer.style.height = (maxTranslate + viewH + 2) + 'px';
-}
+    /* ===== 이미지 관리 ===== */
+    function load(img) {
+      if (img.dataset.loaded) return;
+      img.dataset.loaded = '1';
+      img.src = img.dataset.src;
+    }
 
-/* ===== 이미지 관리 ===== */
-function load(img) {
-  if (img.dataset.loaded) return;
-  img.dataset.loaded = '1';
-  img.src = img.dataset.src;
-}
+    function unload(img) {
+      if (!img.dataset.loaded) return;
+      if (img.id === 'goBtn') return;
+      img.removeAttribute('src');
+      img.dataset.loaded = '';
+      img.classList.remove('show');
+      img.style.display = 'none';
+    }
 
-function unload(img) {
-  if (!img.dataset.loaded) return;
-  if (img.id === 'goBtn') return;
-  img.removeAttribute('src');
-  img.dataset.loaded = '';
-  img.classList.remove('show');
-}
+    /* ===== 스크롤 ===== */
+    function update() {
+      const y = window.pageYOffset;
+      const t = Math.min(y, maxTranslate);
+      stage.style.transform = `translate3d(0, ${-t}px, 0)`;
 
-/* ===== 스크롤 ===== */
-function update() {
-  const y = window.pageYOffset;
-  const t = Math.min(y, maxTranslate);
-  stage.style.transform = `translate3d(0, ${-t}px, 0)`;
+      const scale = frame.clientWidth / CANVAS_W;
+      const revealY = (t + viewH * REVEAL_AT) / scale;
 
-  const scale = frame.clientWidth / CANVAS_W;
-  const revealY = (t + viewH * REVEAL_AT) / scale;
+      for (const img of layers) {
+        const start = +img.dataset.start;
 
-  for (const img of layers) {
-    const start = +img.dataset.start;
+        if (start <= revealY + PRELOAD_AHEAD) {
+          load(img);
+        }
 
-    if (start <= revealY + PRELOAD_AHEAD) load(img);
-    if (start <= revealY + LEAD && img.dataset.loaded) img.classList.add('show');
-    if (start < revealY - UNLOAD_BEHIND) unload(img);
-  }
-}
+        if (start <= revealY + LEAD && img.dataset.loaded) {
+          img.style.display = 'block';
+          // force reflow for transition
+          img.offsetHeight;
+          img.classList.add('show');
+        }
 
-/* ===== 이벤트 ===== */
-window.addEventListener('scroll', update, { passive: true });
+        if (start < revealY - UNLOAD_BEHIND) {
+          unload(img);
+        }
+      }
+    }
 
-window.addEventListener('resize', () => {
-  const newH = window.innerHeight;
-  if (newH !== viewH) {
-    viewH = newH;
-    layout();
-    update();
-  }
-});
+    /* ===== 이벤트 ===== */
+    window.addEventListener('scroll', update, { passive: true });
 
-document.getElementById('goBtn').onclick = () => {
-  location.href = 'sticker.html';
-};
+    window.addEventListener('resize', () => {
+      const newH = window.innerHeight;
+      if (newH !== viewH) {
+        viewH = newH;
+        layout();
+        update();
+      }
+    });
 
-window.addEventListener('load', () => {
-  layout();
-  update();
-  setTimeout(() => loading.classList.add('hide'), 300);
-});
-</script>
+    document.getElementById('goBtn').onclick = () => {
+      location.href = 'sticker.html';
+    };
+
+    window.addEventListener('load', () => {
+      layout();
+      update();
+      setTimeout(() => loading.classList.add('hide'), 300);
+    });
+  </script>
 
 </body>
+
 </html>
