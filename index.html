@@ -22,64 +22,48 @@
       z-index: 10000;
       background: #fff;
       display: flex;
-      flex-direction: column;
-      justify-content: center;
       align-items: center;
-      transition: opacity 800ms ease-out, visibility 800ms;
+      justify-content: center;
+      transition: opacity 350ms ease;
+      opacity: 1;
+      pointer-events: auto;
     }
 
     #loading-overlay.fade-out {
       opacity: 0;
-      visibility: hidden;
+      pointer-events: none;
     }
 
-    .spinner {
-      width: 40px;
-      height: 40px;
-      border: 3px solid rgba(0, 0, 0, 0.1);
-      border-top: 3px solid #000;
-      border-radius: 50%;
-      animation: spin 1s linear infinite;
+    .loading-text {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+      font-size: 14px;
+      color: #111;
+      letter-spacing: 0.2px;
     }
 
-    @keyframes spin {
-      0% {
-        transform: rotate(0deg);
-      }
-
-      100% {
-        transform: rotate(360deg);
-      }
-    }
-
-    /* 중앙 정렬 */
-    .wrap {
-      width: 100vw;
-      display: flex;
-      justify-content: center;
+    /* 메인 레이아웃 */
+    #main-wrap {
+      width: 100%;
+      height: 100%;
       background: #fff;
     }
 
-    .frame {
+    #frame {
       position: relative;
-      width: 100vw;
+      width: 100%;
       height: 100vh;
       overflow: hidden;
       background: #fff;
+      touch-action: pan-y;
+      -webkit-overflow-scrolling: touch;
     }
 
-    @supports (height: 100dvh) {
-      .frame {
-        height: 100dvh;
-      }
-    }
-
-    .stage {
+    #stage {
       position: absolute;
-      inset: 0;
+      left: 0;
+      top: 0;
       width: 100%;
-      transform: translateY(0);
-      will-change: transform;
+      transform: translate3d(0, 0, 0);
     }
 
     .layer {
@@ -108,7 +92,7 @@
     }
 
     /* 버튼 레이어만 클릭 가능 */
-    .layer[src*="button_go.webp"] {
+    #goBtn {
       pointer-events: auto;
       cursor: pointer;
     }
@@ -129,52 +113,80 @@
 </head>
 
 <body>
-  <!-- 로딩 화면 -->
+  <!-- 로딩 오버레이 -->
   <div id="loading-overlay">
-    <div class="spinner"></div>
+    <div class="loading-text">Loading…</div>
   </div>
 
-  <div class="wrap" id="main-wrap">
-    <div class="frame" id="frame">
-      <div class="stage" id="stage">
-        <!-- A-Series: a1-a13 -->
-        <img class="layer" data-start="0" src="assets/a1.webp" alt="">
-        <img class="layer" data-start="70" src="assets/a2.webp" alt="">
-        <img class="layer" data-start="140" src="assets/a3.webp" alt="">
-        <img class="layer" data-start="210" src="assets/a4.webp" alt="">
-        <img class="layer" data-start="280" src="assets/a5.webp" alt="">
-        <img class="layer" data-start="350" src="assets/a6.webp" alt="">
-        <img class="layer" data-start="420" src="assets/a7.webp" alt="">
-        <img class="layer" data-start="490" src="assets/a8.webp" alt="">
-        <img class="layer" data-start="560" src="assets/a9.webp" alt="">
-        <img class="layer" data-start="630" src="assets/a10.webp" alt="">
-        <img class="layer" data-start="700" src="assets/a11.webp" alt="">
-        <img class="layer" data-start="770" src="assets/a12.webp" alt="">
-        <img class="layer" data-start="840" src="assets/a13.webp" alt="">
+  <div id="main-wrap">
+    <div id="frame">
+      <div id="stage">
+        <!-- ✅ iOS 크래시 방지: src 제거, data-src로 지연 로드 -->
+        <img class="layer" data-start="0" data-src="assets/a1.webp" alt="" loading="lazy" decoding="async"
+          fetchpriority="low">
+        <img class="layer" data-start="70" data-src="assets/a2.webp" alt="" loading="lazy" decoding="async"
+          fetchpriority="low">
+        <img class="layer" data-start="140" data-src="assets/a3.webp" alt="" loading="lazy" decoding="async"
+          fetchpriority="low">
+        <img class="layer" data-start="210" data-src="assets/a4.webp" alt="" loading="lazy" decoding="async"
+          fetchpriority="low">
+        <img class="layer" data-start="280" data-src="assets/a5.webp" alt="" loading="lazy" decoding="async"
+          fetchpriority="low">
+        <img class="layer" data-start="350" data-src="assets/a6.webp" alt="" loading="lazy" decoding="async"
+          fetchpriority="low">
+        <img class="layer" data-start="420" data-src="assets/a7.webp" alt="" loading="lazy" decoding="async"
+          fetchpriority="low">
+        <img class="layer" data-start="490" data-src="assets/a8.webp" alt="" loading="lazy" decoding="async"
+          fetchpriority="low">
+        <img class="layer" data-start="560" data-src="assets/a9.webp" alt="" loading="lazy" decoding="async"
+          fetchpriority="low">
+        <img class="layer" data-start="630" data-src="assets/a10.webp" alt="" loading="lazy" decoding="async"
+          fetchpriority="low">
+        <img class="layer" data-start="700" data-src="assets/a11.webp" alt="" loading="lazy" decoding="async"
+          fetchpriority="low">
+        <img class="layer" data-start="770" data-src="assets/a12.webp" alt="" loading="lazy" decoding="async"
+          fetchpriority="low">
+        <img class="layer" data-start="840" data-src="assets/a13.webp" alt="" loading="lazy" decoding="async"
+          fetchpriority="low">
+        <img class="layer" data-start="910" data-src="assets/a14.webp" alt="" loading="lazy" decoding="async"
+          fetchpriority="low">
 
-        <!-- B-Series: b1-b14 -->
-        <img class="layer" data-start="950" src="assets/b1.webp" alt="">
-        <img class="layer" data-start="1030" src="assets/b2.webp" alt="">
-        <img class="layer" data-start="1110" src="assets/b3.webp" alt="">
-        <img class="layer" data-start="1190" src="assets/b4.webp" alt="">
-        <img class="layer" data-start="1270" src="assets/b5.webp" alt="">
-        <img class="layer" data-start="1350" src="assets/b6.webp" alt="">
-        <img class="layer" data-start="1430" src="assets/b7.webp" alt="">
-        <img class="layer" data-start="1510" src="assets/b8.webp" alt="">
-        <img class="layer" data-start="1590" src="assets/b9.webp" alt="">
-        <img class="layer" data-start="1670" src="assets/b10.webp" alt="">
-        <img class="layer" data-start="1750" src="assets/b11.webp" alt="">
-        <img class="layer" data-start="1830" src="assets/b12.webp" alt="">
-        <img class="layer" data-start="1910" src="assets/b13.webp" alt="">
-        <img class="layer" data-start="1990" src="assets/b14.webp" alt="">
+        <img class="layer" data-start="980" data-src="assets/b1.webp" alt="" loading="lazy" decoding="async"
+          fetchpriority="low">
+        <img class="layer" data-start="1060" data-src="assets/b2.webp" alt="" loading="lazy" decoding="async"
+          fetchpriority="low">
+        <img class="layer" data-start="1140" data-src="assets/b3.webp" alt="" loading="lazy" decoding="async"
+          fetchpriority="low">
+        <img class="layer" data-start="1220" data-src="assets/b4.webp" alt="" loading="lazy" decoding="async"
+          fetchpriority="low">
+        <img class="layer" data-start="1300" data-src="assets/b5.webp" alt="" loading="lazy" decoding="async"
+          fetchpriority="low">
+        <img class="layer" data-start="1380" data-src="assets/b6.webp" alt="" loading="lazy" decoding="async"
+          fetchpriority="low">
+        <img class="layer" data-start="1460" data-src="assets/b7.webp" alt="" loading="lazy" decoding="async"
+          fetchpriority="low">
+        <img class="layer" data-start="1540" data-src="assets/b8.webp" alt="" loading="lazy" decoding="async"
+          fetchpriority="low">
+        <img class="layer" data-start="1620" data-src="assets/b9.webp" alt="" loading="lazy" decoding="async"
+          fetchpriority="low">
+        <img class="layer" data-start="1700" data-src="assets/b10.webp" alt="" loading="lazy" decoding="async"
+          fetchpriority="low">
+        <img class="layer" data-start="1780" data-src="assets/b11.webp" alt="" loading="lazy" decoding="async"
+          fetchpriority="low">
+        <img class="layer" data-start="1860" data-src="assets/b12.webp" alt="" loading="lazy" decoding="async"
+          fetchpriority="low">
+        <img class="layer" data-start="1910" data-src="assets/b13.webp" alt="" loading="lazy" decoding="async"
+          fetchpriority="low">
+        <img class="layer" data-start="1990" data-src="assets/b14.webp" alt="" loading="lazy" decoding="async"
+          fetchpriority="low">
 
-        <!-- Final Button -->
-        <img class="layer" data-start="2100" src="assets/button_go.webp" alt="">
+        <img id="goBtn" class="layer" data-start="2100" data-src="assets/button_go.webp" alt="" loading="lazy"
+          decoding="async" fetchpriority="low">
       </div>
     </div>
-  </div>
 
-  <div class="spacer" id="spacer"></div>
+    <div id="spacer" class="spacer"></div>
+  </div>
 
   <script>
     const CANVAS_W = 390;
@@ -222,6 +234,36 @@
       wrap.style.width = '100%';
     }
 
+    function ensureLoaded(img) {
+      if (img.dataset.loaded === '1') return;
+      const src = img.dataset.src;
+      if (!src) return;
+
+      img.dataset.loaded = '1';
+      img.src = src;
+
+      // 로드 완료 후 표시 (깜빡임/검은박스 완화)
+      img.addEventListener('load', () => {
+        img.classList.add('show');
+        img.style.visibility = 'visible';
+        img.style.opacity = '1';
+      }, { once: true });
+    }
+
+    function unload(img) {
+      if (img.dataset.loaded !== '1') return;
+      // iOS 메모리 압박 완화: 너무 뒤로 지나간 이미지는 src 제거
+      img.removeAttribute('src');
+      img.dataset.loaded = '0';
+      img.classList.remove('show');
+      img.style.visibility = 'hidden';
+      img.style.opacity = '0';
+    }
+
+    // iOS Safari 크래시 방지용: 필요할 때만 이미지 로드/디코딩
+    const PRELOAD_AHEAD = 500;   // 앞으로 미리 로드할 여유(캔버스 좌표 기준)
+    const UNLOAD_BEHIND = 1400;  // 뒤로 너무 지나간 건 언로드(캔버스 좌표 기준)
+
     function updateScroll() {
       const y = window.pageYOffset || document.documentElement.scrollTop;
       const translateY = Math.min(y, MAX_TRANSLATE);
@@ -232,16 +274,37 @@
       const scale = frameW / CANVAS_W;
       const currentRevealY = (translateY + viewHeight * REVEAL_AT) / scale;
 
+      const showThreshold = currentRevealY + LEAD;
+      const loadThreshold = showThreshold + PRELOAD_AHEAD;
+      const unloadThreshold = currentRevealY - UNLOAD_BEHIND;
+
       for (const img of layers) {
         const start = Number(img.dataset.start || 0);
-        if (start <= currentRevealY + LEAD) {
-          img.classList.add('show');
+
+        // 버튼은 끝까지 유지
+        const isGoBtn = img.id === 'goBtn' || (img.dataset.src || '').includes('button_go.webp');
+
+        // 가까워지면 로드
+        if (start <= loadThreshold) {
+          ensureLoaded(img);
+
+          // 이미 로드 완료된 경우, 보이는 구간이면 바로 show
+          if (start <= showThreshold && img.dataset.loaded === '1' && img.complete) {
+            img.classList.add('show');
+            img.style.visibility = 'visible';
+            img.style.opacity = '1';
+          }
+        }
+
+        // 너무 뒤로 지나간 이미지는 언로드 (버튼 제외)
+        if (!isGoBtn && start < unloadThreshold) {
+          unload(img);
         }
       }
     }
 
     function initEvents() {
-      const btn = document.querySelector('.layer[src*="button_go.webp"]');
+      const btn = document.querySelector('#goBtn');
       if (btn) {
         btn.addEventListener('click', () => {
           window.location.href = 'sticker.html';
