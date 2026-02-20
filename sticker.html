@@ -175,8 +175,9 @@
     .slider-outer {
       position: relative;
       width: 100%;
-      aspect-ratio: 1/1;
       /* 1080/1350(0.8) -> 1/1(1) 로 변경하여 팝업 내 스크롤 방지 */
+      /* st_A의 케이크 이미지(1080x1350)에 맞게 가변적으로 설정하거나 기본 비율 조정 */
+      aspect-ratio: var(--slider-ratio, 1/1);
       overflow: hidden;
       border-radius: 14px;
       background: #fdfdfd;
@@ -435,17 +436,18 @@
         A: {
           title: "My sweetie loves sweet things.",
           images: ["assets/cake_0.png", "assets/cake_1.png", "assets/cake_2.png"],
-          caption: "260101과 키친205."
+          caption: "My sweetie loves sweet things. She's really into strawberry cake these days. Birthday or not, she eats it anyway.",
+          ratio: "1/1"
         },
         B: {
-          title: "여유로운 현서의 여유로운 R&B 플레이리스트.",
+          title: "Mellow R&B",
           youtube: "s8fcHQ-SUrE",
-          caption: "부드럽고 감각적인 무드를 사랑하는 도영이를 위한 R&B 플레이리스트입니다. 깊이 있는 리듬과 감미로운 선율에 몸을 맡겨보세요.\n\n[Tracklist 💿]\n0:00 Bungee - 백현\n3:21 Make up - Sam Kim\n6:43 Open Arms - SZA\n9:41 trippin’ - thuy\n12:01 Toronto 2014 - Daniel Caesar\n16:35 Come Around Me - Justin Bieber"
+          caption: "여유로운 이서의 여유로운 알앤비 플레이리스트.\n\n[Tracklist 💿]\n0:00 Bungee - 백현\n3:21 Make up - Sam Kim\n6:43 Open Arms - SZA\n9:41 trippin’ - thuy\n12:01 Toronto 2014 - Daniel Caesar\n16:35 Come Around Me - Justin Bieber"
         },
         C: {
           title: "Different rings everyday",
           image: "assets/st_A_ring.gif",
-          caption: "주얼리 파우치를 들고 다니며 날마다 반지를 바꿔낀다고 한다."
+          caption: "주얼리 파우치를 들고 다니며 날마다 반지를 바꾸어 착용한다고 한다."
         },
         D: {
           title: "The Scent of Memories",
@@ -530,6 +532,12 @@
             html += `<div class="caption">${escapeHTML(data.caption)}</div>`;
           }
           modalBody.innerHTML = html;
+
+          // 비율 조정 (기본값 1/1)
+          const sliderOuter = modalBody.querySelector('#sliderOuter');
+          if (sliderOuter) {
+            sliderOuter.style.setProperty('--slider-ratio', data.ratio || '1/1');
+          }
 
           if ((data.images && Array.isArray(data.images)) || (data.items && Array.isArray(data.items))) {
             setupSlider();
