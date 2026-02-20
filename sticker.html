@@ -152,10 +152,12 @@
 
     .tab-button {
       position: absolute;
-      bottom: 40px;
+      bottom: 10px;
+      /* 780px 기준 20px -> 390px 기준 10px */
       left: 50%;
       transform: translateX(-50%);
-      width: 80%;
+      width: 74.87%;
+      /* (780-196)/780 ≈ 74.87% */
       cursor: pointer;
       display: none;
       z-index: 100;
@@ -239,6 +241,17 @@
       const VISIT_KEY = "visited_stickers_v1";
       const readVisits = () => { try { return JSON.parse(localStorage.getItem(VISIT_KEY) || "{}"); } catch { return {}; } };
       const writeVisits = (v) => localStorage.setItem(VISIT_KEY, JSON.stringify(v));
+      const resetVisits = () => { writeVisits({}); location.reload(); };
+
+      // Debug Reset: 배경(frame) 5번 클릭 시 초기화
+      let bgClickCount = 0;
+      document.getElementById('frame').addEventListener('click', (e) => {
+        if (e.target.id === 'frame') {
+          bgClickCount++;
+          if (bgClickCount >= 5) resetVisits();
+          setTimeout(() => bgClickCount = 0, 2000);
+        }
+      });
 
       const stickers = [...document.querySelectorAll('.sticker')];
 
@@ -300,20 +313,23 @@
 
         overlay.classList.add('open');
         overlay.setAttribute('aria-hidden', 'false');
+        overlay.dataset.activeId = id; // 현재 열린 ID 저장
+      }
 
-        // 방문 처리(옵션)
-        if (HIDE_AFTER_OPEN) {
+      function closeModal() {
+        const id = overlay.dataset.activeId;
+        overlay.classList.remove('open');
+        overlay.setAttribute('aria-hidden', 'true');
+        modalBody.innerHTML = "";
+
+        // 방문 처리: 팝업을 '닫을 때' 사라지도록 수정
+        if (HIDE_AFTER_OPEN && id) {
           const v = readVisits();
           v[id] = true;
           writeVisits(v);
           applyVisited();
         }
-      }
-
-      function closeModal() {
-        overlay.classList.remove('open');
-        overlay.setAttribute('aria-hidden', 'true');
-        modalBody.innerHTML = "";
+        overlay.dataset.activeId = "";
       }
 
       stickers.forEach(el => {
@@ -323,8 +339,7 @@
       const tabBtn = document.getElementById('tabButton');
       if (tabBtn) {
         tabBtn.addEventListener('click', () => {
-          // 다음 페이지로 이동 (사용자 요청에 따라 다음 페이지 파일명으로 변경 필요)
-          window.location.href = 'index.html'; // 우선 index.html로 설정해둡니다.
+          window.location.href = 'letter.html';
         });
       }
 
