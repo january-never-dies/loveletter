@@ -3,9 +3,11 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>Sticker</title>
+  <title>Sticker Board</title>
   <style>
     html, body { margin:0; height:100%; background:#000; }
+    * { box-sizing:border-box; }
+
     .frame{
       width:min(100vw, calc(100vh * (390/844)));
       aspect-ratio:390/844;
@@ -26,73 +28,226 @@
       user-select:none;
       -webkit-user-drag:none;
       cursor:pointer;
-      transition:opacity .2s ease, transform .2s ease;
+      transition:transform .12s ease, opacity .2s ease;
       will-change:transform;
     }
-    .sticker.hidden{
-      opacity:0;
-      pointer-events:none;
+    .sticker:active{ transform: scale(0.98) rotate(var(--rot, 0deg)); }
+
+    /* ===== Modal ===== */
+    .overlay{
+      position:fixed;
+      inset:0;
+      background:rgba(0,0,0,.55);
+      display:none;
+      align-items:center;
+      justify-content:center;
+      padding:18px;
+      z-index:9999;
+    }
+    .overlay.open{ display:flex; }
+
+    .modal{
+      width:min(560px, 100%);
+      max-height:min(80vh, 720px);
+      background:#fff;
+      border-radius:18px;
+      overflow:hidden;
+      box-shadow:0 20px 80px rgba(0,0,0,.35);
+      font-family:system-ui, -apple-system, "Apple SD Gothic Neo", sans-serif;
+    }
+    .modalHeader{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      padding:12px 14px;
+      border-bottom:1px solid rgba(0,0,0,.08);
+    }
+    .modalTitle{
+      font-weight:900;
+      font-size:14px;
+      letter-spacing:.2px;
+    }
+    .closeBtn{
+      border:0;
+      background:#000;
+      color:#fff;
+      border-radius:12px;
+      padding:8px 10px;
+      font-weight:800;
+      cursor:pointer;
+    }
+    .modalBody{
+      padding:14px;
+      overflow:auto;
+      max-height:calc(min(80vh, 720px) - 54px);
+    }
+
+    /* 콘텐츠 기본 스타일 */
+    .modalBody img{
+      width:100%;
+      height:auto;
+      border-radius:14px;
+      display:block;
+    }
+    .modalBody video{
+      width:100%;
+      border-radius:14px;
+      display:block;
+      background:#000;
+    }
+    .caption{
+      margin-top:10px;
+      font-size:13px;
+      line-height:1.5;
+      opacity:.85;
+      white-space:pre-wrap;
     }
   </style>
 </head>
 <body>
+
   <div class="frame" id="frame">
     <img class="bg" src="assets/st_bg.png" alt="" fetchpriority="high" decoding="async">
 
-    <!-- A (거의 수평) -->
-    <img class="sticker" data-id="A"
-      src="assets/st_A.png"
-      style="left:2.05%; top:19.55%; width:73.08%; transform:rotate(0deg);"
-      alt="" decoding="async">
-
-    <!-- B (약 -24.5도) -->
-    <img class="sticker" data-id="B"
-      src="assets/st_B.png"
-      style="left:22.31%; top:29.74%; width:70.77%; transform:rotate(-24.5deg);"
-      alt="" decoding="async">
-
-    <!-- C (약 +18.8도) -->
-    <img class="sticker" data-id="C"
-      src="assets/st_C.png"
-      style="left:3.08%; top:49.05%; width:63.85%; transform:rotate(18.8deg);"
-      alt="" decoding="async">
-
-    <!-- D (약 -4.8도) -->
-    <img class="sticker" data-id="D"
-      src="assets/st_D.png"
-      style="left:3.33%; top:73.34%; width:81.79%; transform:rotate(-4.8deg);"
-      alt="" decoding="async">
+    <!-- 배치값: st_layout 기준 -->
+    <img class="sticker" data-id="A" src="assets/st_A.png"
+      style="left:2.05%; top:19.55%; width:73.08%; --rot:0deg; transform:rotate(0deg);" alt="" decoding="async">
+    <img class="sticker" data-id="B" src="assets/st_B.png"
+      style="left:22.31%; top:29.74%; width:70.77%; --rot:-24.5deg; transform:rotate(-24.5deg);" alt="" decoding="async">
+    <img class="sticker" data-id="C" src="assets/st_C.png"
+      style="left:3.08%; top:49.05%; width:63.85%; --rot:18.8deg; transform:rotate(18.8deg);" alt="" decoding="async">
+    <img class="sticker" data-id="D" src="assets/st_D.png"
+      style="left:3.33%; top:73.34%; width:81.79%; --rot:-4.8deg; transform:rotate(-4.8deg);" alt="" decoding="async">
   </div>
 
-  <script>
-    // 클릭하면 “방문 처리 → 사라짐” (나중에 메뉴 이동으로 바꿔 끼우면 됨)
-    const KEY = "visited_stickers_v1";
-    const get = () => { try { return JSON.parse(localStorage.getItem(KEY)||"{}"); } catch { return {}; } };
-    const set = (v) => localStorage.setItem(KEY, JSON.stringify(v));
+  <!-- Modal -->
+  <div class="overlay" id="overlay" aria-hidden="true">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+      <div class="modalHeader">
+        <div class="modalTitle" id="modalTitle">Sticker</div>
+        <button class="closeBtn" id="closeBtn">Close</button>
+      </div>
+      <div class="modalBody" id="modalBody"></div>
+    </div>
+  </div>
 
-    const stickers = [...document.querySelectorAll(".sticker")];
+<script>
+(() => {
+  const overlay = document.getElementById('overlay');
+  const closeBtn = document.getElementById('closeBtn');
+  const modalTitle = document.getElementById('modalTitle');
+  const modalBody = document.getElementById('modalBody');
 
-    function apply(){
-      const visited = get();
-      stickers.forEach(el=>{
-        if(visited[el.dataset.id]) el.classList.add("hidden");
-        else el.classList.remove("hidden");
-      });
+  // ✅ 여기만 바꾸면 됨: 스티커별로 보여줄 콘텐츠 정의
+  // - image: 이미지 파일 경로
+  // - video: 영상 파일 경로(mp4 권장)
+  // - html: 자유롭게 텍스트/링크 등 넣기 (짧게)
+  const CONTENT = {
+    A: {
+      title: "A — Strawberry Cake",
+      image: "assets/content_A.jpg",
+      caption: "여기에 A 설명/문장 넣기"
+    },
+    B: {
+      title: "B — R&B",
+      video: "assets/content_B.mp4",
+      caption: "여기에 B 설명/문장 넣기"
+    },
+    C: {
+      title: "C — Caution",
+      image: "assets/content_C.jpg",
+      caption: "여기에 C 설명/문장 넣기"
+    },
+    D: {
+      title: "D — Scent Obsessed",
+      image: "assets/content_D.jpg",
+      caption: "여기에 D 설명/문장 넣기"
+    },
+  };
+
+  // (옵션) 보고 나온 스티커를 숨기고 싶으면 true
+  const HIDE_AFTER_OPEN = false;
+  const VISIT_KEY = "visited_stickers_v1";
+  const readVisits = () => { try { return JSON.parse(localStorage.getItem(VISIT_KEY) || "{}"); } catch { return {}; } };
+  const writeVisits = (v) => localStorage.setItem(VISIT_KEY, JSON.stringify(v));
+
+  const stickers = [...document.querySelectorAll('.sticker')];
+
+  function applyVisited(){
+    if(!HIDE_AFTER_OPEN) return;
+    const visited = readVisits();
+    stickers.forEach(el=>{
+      if(visited[el.dataset.id]) el.style.opacity = "0";
+      if(visited[el.dataset.id]) el.style.pointerEvents = "none";
+    });
+  }
+
+  function openModal(id){
+    const data = CONTENT[id];
+    if(!data){
+      modalTitle.textContent = id;
+      modalBody.innerHTML = `<div class="caption">콘텐츠가 아직 없음</div>`;
+    } else {
+      modalTitle.textContent = data.title || id;
+
+      // 콘텐츠 렌더
+      let html = "";
+      if(data.image){
+        html += `<img src="${data.image}" alt="">`;
+      }
+      if(data.video){
+        html += `<video src="${data.video}" controls playsinline></video>`;
+      }
+      if(data.html){
+        html += data.html;
+      }
+      if(data.caption){
+        html += `<div class="caption">${escapeHTML(data.caption)}</div>`;
+      }
+      modalBody.innerHTML = html;
     }
 
-    stickers.forEach(el=>{
-      el.addEventListener("click", ()=>{
-        const visited = get();
-        visited[el.dataset.id] = true;
-        set(visited);
-        apply();
+    overlay.classList.add('open');
+    overlay.setAttribute('aria-hidden', 'false');
 
-        // ✅ 실제 메뉴로 보내려면 이걸로 교체:
-        // location.href = `menu.html?id=${encodeURIComponent(el.dataset.id)}`;
-      });
-    });
+    // 방문 처리(옵션)
+    if(HIDE_AFTER_OPEN){
+      const v = readVisits();
+      v[id] = true;
+      writeVisits(v);
+      applyVisited();
+    }
+  }
 
-    apply();
-  </script>
+  function closeModal(){
+    overlay.classList.remove('open');
+    overlay.setAttribute('aria-hidden', 'true');
+    modalBody.innerHTML = "";
+  }
+
+  stickers.forEach(el=>{
+    el.addEventListener('click', ()=> openModal(el.dataset.id));
+  });
+
+  closeBtn.addEventListener('click', closeModal);
+  overlay.addEventListener('click', (e)=>{
+    if(e.target === overlay) closeModal(); // 바깥 클릭 닫기
+  });
+  window.addEventListener('keydown', (e)=>{
+    if(e.key === "Escape" && overlay.classList.contains('open')) closeModal();
+  });
+
+  function escapeHTML(s){
+    return String(s)
+      .replaceAll("&","&amp;")
+      .replaceAll("<","&lt;")
+      .replaceAll(">","&gt;");
+  }
+
+  applyVisited();
+})();
+</script>
+
 </body>
 </html>
