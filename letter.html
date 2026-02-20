@@ -2,521 +2,458 @@
 <html lang="ko">
 
 <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <title>Letter to Me</title>
-    <style>
-        html,
-        body {
-            margin: 0;
-            min-height: 100vh;
-            background: #bcbabc;
-            font-family: system-ui, -apple-system, "Apple SD Gothic Neo", sans-serif;
-            overflow-x: hidden;
-            overflow-y: auto;
-        }
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Letter to Me</title>
+  <style>
+    html,
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: #bcbabc;
+      font-family: system-ui, -apple-system, "Apple SD Gothic Neo", sans-serif;
+      overflow-x: hidden;
+      overflow-y: auto;
+    }
 
-        * {
-            box-sizing: border-box;
-        }
+    * {
+      box-sizing: border-box;
+    }
 
-        .frame {
-            width: min(100vw, calc(100vh * (390/844)));
-            min-height: 100vh;
-            margin: auto;
-            position: relative;
-            background: #bcbabc;
-        }
+    .frame {
+      width: min(100vw, calc(100vh * (390/844)));
+      min-height: 100vh;
+      margin: auto;
+      position: relative;
+      background: #bcbabc;
+    }
 
-        .bg {
-            display: block;
-            width: 100%;
-            height: auto;
-            user-select: none;
-            pointer-events: none;
-        }
+    .bg {
+      display: block;
+      width: 100%;
+      height: auto;
+      user-select: none;
+      pointer-events: none;
+    }
 
-        .write-pad {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 45%;
-            z-index: 10;
-            pointer-events: none;
-            /* Make it pass-through for easier pencil movement check if needed, but we'll use rects */
-        }
+    .write-pad {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 45%;
+      z-index: 10;
+      pointer-events: none;
+    }
 
-        .pencil {
-            position: absolute;
-            bottom: 20px;
-            right: 20px;
-            width: 160px;
-            /* Doubled size */
-            cursor: grab;
-            z-index: 20;
-            touch-action: none;
-            transition: transform 0.1s ease-out;
-        }
+    .pencil {
+      position: absolute;
+      bottom: 20px;
+      right: 20px;
+      width: 160px;
+      cursor: grab;
+      z-index: 20;
+      touch-action: none;
+      transition: transform 0.1s ease-out;
+    }
 
-        .pencil.dragging {
-            cursor: grabbing;
-            transition: none;
-            z-index: 1001;
-            /* Above modal? No, below modal, but above everything else in frame */
-        }
+    .pencil.dragging {
+      cursor: grabbing;
+      transition: none;
+      z-index: 1001;
+    }
 
-        /* Modal Styles */
-        .overlay {
-            position: fixed;
-            inset: 0;
-            background: rgba(0, 0, 0, 0.6);
-            backdrop-filter: blur(4px);
-            display: none;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-            z-index: 1000;
-            opacity: 0;
-            transition: opacity 0.3s ease;
-        }
+    /* Modal Styles */
+    .overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(4px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      z-index: 1000;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
 
-        .overlay.open {
-            display: flex;
-            opacity: 1;
-        }
+    .overlay.open {
+      display: flex;
+      opacity: 1;
+    }
 
-        .modal {
-            width: min(500px, 100%);
-            background: #fff;
-            border-radius: 24px;
-            padding: 24px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            transform: translateY(20px);
-            transition: transform 0.3s ease;
-        }
+    .modal {
+      width: min(500px, 100%);
+      background: #fff;
+      border-radius: 24px;
+      padding: 24px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      transform: translateY(20px);
+      transition: transform 0.3s ease;
+    }
 
-        .overlay.open .modal {
-            transform: translateY(0);
-        }
+    .overlay.open .modal {
+      transform: translateY(0);
+    }
 
-        .modal-title {
-            font-size: 20px;
-            font-weight: 800;
-            margin-bottom: 20px;
-            text-align: center;
-            color: #111;
-        }
+    .modal-title {
+      font-size: 20px;
+      font-weight: 800;
+      margin-bottom: 20px;
+      text-align: center;
+      color: #111;
+    }
 
-        .form-group {
-            margin-bottom: 18px;
-        }
+    .form-group {
+      margin-bottom: 18px;
+    }
 
-        .form-label {
-            display: block;
-            font-size: 13px;
-            font-weight: 700;
-            margin-bottom: 6px;
-            color: #666;
-        }
+    .form-label {
+      display: block;
+      font-size: 13px;
+      font-weight: 700;
+      margin-bottom: 6px;
+      color: #666;
+    }
 
-        .form-input,
-        .form-textarea {
-            width: 100%;
-            padding: 12px 14px;
-            border: 1.5px solid #eee;
-            border-radius: 12px;
-            font-size: 15px;
-            font-family: inherit;
-            outline: none;
-            transition: border-color 0.2s;
-        }
+    .form-input,
+    .form-textarea {
+      width: 100%;
+      padding: 12px 14px;
+      border: 1.5px solid #eee;
+      border-radius: 12px;
+      font-size: 15px;
+      font-family: inherit;
+      outline: none;
+      transition: border-color 0.2s;
+    }
 
-        .form-input:focus,
-        .form-textarea:focus {
-            border-color: #ffb7c5;
-        }
+    .form-input:focus,
+    .form-textarea:focus {
+      border-color: #ffb7c5;
+    }
 
-        .form-textarea {
-            height: 120px;
-            resize: none;
-        }
+    .form-textarea {
+      height: 120px;
+      resize: none;
+    }
 
-        .consent-group {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            background: #f9f9f9;
-            padding: 12px;
-            border-radius: 12px;
-            margin-bottom: 24px;
-        }
+    .consent-group {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: #f9f9f9;
+      padding: 12px;
+      border-radius: 12px;
+      margin-bottom: 24px;
+    }
 
-        .consent-label {
-            flex: 1;
-            font-size: 13px;
-            line-height: 1.4;
-            color: #444;
-        }
+    .consent-label {
+      flex: 1;
+      font-size: 13px;
+      line-height: 1.4;
+      color: #444;
+    }
 
-        .toggle-btns {
-            display: flex;
-            background: #eee;
-            padding: 2px;
-            border-radius: 8px;
-        }
+    .toggle-btns {
+      display: flex;
+      background: #eee;
+      padding: 2px;
+      border-radius: 8px;
+    }
 
-        .toggle-btn {
-            padding: 6px 12px;
-            font-size: 12px;
-            font-weight: 700;
-            border-radius: 6px;
-            cursor: pointer;
-            border: none;
-            background: transparent;
-            color: #888;
-        }
+    .toggle-btn {
+      padding: 6px 12px;
+      font-size: 12px;
+      font-weight: 700;
+      border-radius: 6px;
+      cursor: pointer;
+      border: none;
+      background: transparent;
+      color: #888;
+    }
 
-        .toggle-btn.active {
-            background: #fff;
-            color: #000;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        }
+    .toggle-btn.active {
+      background: #fff;
+      color: #000;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
 
-        .submit-btn {
-            width: 100%;
-            padding: 16px;
-            background: #000;
-            color: #fff;
-            border: none;
-            border-radius: 14px;
-            font-size: 16px;
-            font-weight: 800;
-            cursor: pointer;
-            transition: transform 0.1s, opacity 0.2s;
-        }
+    .submit-btn {
+      width: 100%;
+      padding: 16px;
+      background: #000;
+      color: #fff;
+      border: none;
+      border-radius: 14px;
+      font-size: 16px;
+      font-weight: 800;
+      cursor: pointer;
+      transition: transform 0.1s, opacity 0.2s;
+    }
 
-        .submit-btn:active {
-            transform: scale(0.98);
-            opacity: 0.9;
-        }
+    .submit-btn:active {
+      transform: scale(0.98);
+      opacity: 0.9;
+    }
 
-        /* Success State */
-        .success-content {
-            text-align: center;
-            padding: 20px 0;
-            display: none;
-        }
+    /* Success State */
+    .success-content {
+      text-align: center;
+      padding: 20px 0;
+      display: none;
+    }
 
-        .success-icon {
-            font-size: 48px;
-            margin-bottom: 16px;
-        }
+    .success-icon {
+      font-size: 48px;
+      margin-bottom: 16px;
+    }
 
-        .success-msg {
-            font-size: 18px;
-            font-weight: 700;
-            color: #111;
-            margin-bottom: 8px;
-        }
+    .success-msg {
+      font-size: 18px;
+      font-weight: 700;
+      color: #111;
+      margin-bottom: 8px;
+    }
 
-        .success-sub {
-            font-size: 14px;
-            color: #666;
-        }
-    </style>
+    .success-sub {
+      font-size: 14px;
+      color: #666;
+    }
+  </style>
 </head>
 
 <body>
 
-    <div class="frame">
-        <img class="bg" src="assets/lt_bg.png" alt="">
-        <img src="assets/lt_write.png" class="write-pad" id="pad" alt="">
-        <img src="assets/lt_pencil.png" class="pencil" id="pencil" alt="Drag pencil to write">
-    </div>
+  <div class="frame">
+    <img class="bg" src="assets/lt_bg.png" alt="">
+    <img src="assets/lt_write.png" class="write-pad" id="pad" alt="">
+    <img src="assets/lt_pencil.png" class="pencil" id="pencil" alt="Drag pencil to write">
+  </div>
 
-    <!-- Modal Overlay -->
-    <div class="overlay" id="overlay">
-        <div class="modal" id="modal">
-            <div id="form-content">
-                <div class="modal-title">마음 전하기</div>
+  <!-- Modal Overlay -->
+  <div class="overlay" id="overlay">
+    <div class="modal" id="modal">
+      <div id="form-content">
+        <div class="modal-title">마음 전하기</div>
 
-                <div class="form-group">
-                    <label class="form-label">To. 받는 사람</label>
-                    <input type="text" id="recipient" class="form-input" placeholder="좋아하는 현서의 애칭을 입력해주세요.">
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label">편지 내용</label>
-                    <textarea id="message" class="form-textarea" placeholder="마음을 전해봅시다."></textarea>
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label">From. 보내는 사람</label>
-                    <input type="text" id="sender" class="form-input" placeholder="성함을 입력해주세요. 닉네임도 가능합니다.">
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label">콘텐츠 활용 동의</label>
-                    <div class="consent-group">
-                        <span class="consent-label">추후 콘텐츠 제작 시 익명으로 편지 내용이 공개되는 것에 동의하시나요?</span>
-                        <div class="toggle-btns">
-                            <button class="toggle-btn active" data-value="yes">YES</button>
-                            <button class="toggle-btn" data-value="no">NO</button>
-                        </div>
-                    </div>
-                </div>
-
-                <button id="submitBtn" class="submit-btn" disabled>보내기</button>
-            </div>
-
-            <div id="success-content" class="success-content">
-                <div class="success-icon">💌</div>
-                <div class="success-msg">편지가 소중히 전달되었습니다!</div>
-                <div class="success-sub">작성해주신 따뜻한 마음 감사합니다.</div>
-                <button class="submit-btn" style="margin-top:24px;" onclick="location.reload()">닫기</button>
-            </div>
+        <div class="form-group">
+          <label class="form-label">To. 받는 사람</label>
+          <input type="text" id="recipient" class="form-input" placeholder="좋아하는 현서의 애칭을 입력해주세요.">
         </div>
+
+        <div class="form-group">
+          <label class="form-label">편지 내용</label>
+          <textarea id="message" class="form-textarea" placeholder="마음을 전해봅시다."></textarea>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">From. 보내는 사람</label>
+          <input type="text" id="sender" class="form-input" placeholder="성함을 입력해주세요. 닉네임도 가능합니다.">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">콘텐츠 활용 동의</label>
+          <div class="consent-group">
+            <span class="consent-label">추후 콘텐츠 제작 시 익명으로 편지 내용이 공개되는 것에 동의하시나요?</span>
+            <div class="toggle-btns">
+              <button class="toggle-btn active" data-value="yes">YES</button>
+              <button class="toggle-btn" data-value="no">NO</button>
+            </div>
+          </div>
+        </div>
+
+        <button id="submitBtn" class="submit-btn" disabled>보내기</button>
+      </div>
+
+      <div id="success-content" class="success-content">
+        <div class="success-icon">💌</div>
+        <div class="success-msg">편지가 소중히 전달되었습니다!</div>
+        <div class="success-sub">작성해주신 따뜻한 마음 감사합니다.</div>
+        <button class="submit-btn" style="margin-top:24px;" onclick="location.reload()">닫기</button>
+      </div>
     </div>
+  </div>
 
-    <!-- Firebase SDK -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
-        import { getFirestore, collection, addDoc, updateDoc, doc, serverTimestamp, query, where, getDocs } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
-        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
+  <!-- Firebase SDK (always create new letter; no edit) -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
+    import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
+    import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
 
-        // TODO: Replace with your Firebase configuration from the guide
-        const firebaseConfig = {
-            apiKey: "AIzaSyBc-7tXKMNNPIeq2p7iCCpqPfBRNWbWbuU",
-            authDomain: "loveletter-f763f.firebaseapp.com",
-            projectId: "loveletter-f763f",
-            storageBucket: "loveletter-f763f.firebasestorage.app",
-            messagingSenderId: "47570140529",
-            appId: "1:47570140529:web:720f45982941768daa0ad0"
+    // Your Firebase configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyBc-7tXKMNNPIeq2p7iCCpqPfBRNWbWbuU",
+      authDomain: "loveletter-f763f.firebaseapp.com",
+      projectId: "loveletter-f763f",
+      storageBucket: "loveletter-f763f.firebasestorage.app",
+      messagingSenderId: "47570140529",
+      appId: "1:47570140529:web:720f45982941768daa0ad0"
+    };
+
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const auth = getAuth(app);
+
+    // Anonymous Sign-In
+    signInAnonymously(auth).catch((error) => {
+      console.error("Auth failed:", error);
+    });
+
+    let currentUser = null;
+    onAuthStateChanged(auth, (user) => {
+      if (user) currentUser = user;
+    });
+
+    (() => {
+      const pencil = document.getElementById('pencil');
+      const pad = document.getElementById('pad');
+      const overlay = document.getElementById('overlay');
+      const recipientInput = document.getElementById('recipient');
+      const senderInput = document.getElementById('sender');
+      const messageInput = document.getElementById('message');
+      const submitBtn = document.getElementById('submitBtn');
+      const toggleBtns = document.querySelectorAll('.toggle-btn');
+      const formContent = document.getElementById('form-content');
+      const successContent = document.getElementById('success-content');
+
+      let consentValue = 'yes';
+      let isDragging = false;
+      let startX, startY;
+      let initialLeft, initialTop;
+
+      // Drag Logic
+      const startDrag = (e) => {
+        isDragging = true;
+        pencil.classList.add('dragging');
+
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+
+        startX = clientX;
+        startY = clientY;
+
+        // Store computed styles for current position
+        const style = window.getComputedStyle(pencil);
+        const matrix = new WebKitCSSMatrix(style.transform);
+        initialLeft = matrix.m41;
+        initialTop = matrix.m42;
+
+        // Store the origin position once
+        if (typeof pencil.dataset.originX === 'undefined') {
+          pencil.dataset.originX = initialLeft;
+          pencil.dataset.originY = initialTop;
+        }
+      };
+
+      const moveDrag = (e) => {
+        if (!isDragging) return;
+        e.preventDefault();
+
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+
+        const dx = clientX - startX;
+        const dy = clientY - startY;
+
+        pencil.style.transform = `translate(${initialLeft + dx}px, ${initialTop + dy}px)`;
+      };
+
+      const endDrag = () => {
+        if (!isDragging) return;
+        isDragging = false;
+        pencil.classList.remove('dragging');
+
+        const pencilRect = pencil.getBoundingClientRect();
+        const padRect = pad.getBoundingClientRect();
+
+        const isOver = !(pencilRect.right < padRect.left ||
+          pencilRect.left > padRect.right ||
+          pencilRect.bottom < padRect.top ||
+          pencilRect.top > padRect.bottom);
+
+        if (isOver) {
+          overlay.classList.add('open');
+          // Pencil stays where it was dropped
+        } else {
+          // Snap back
+          pencil.style.transform = `translate(${pencil.dataset.originX}px, ${pencil.dataset.originY}px)`;
+        }
+      };
+
+      pencil.addEventListener('mousedown', startDrag);
+      window.addEventListener('mousemove', moveDrag);
+      window.addEventListener('mouseup', endDrag);
+
+      pencil.addEventListener('touchstart', startDrag, { passive: false });
+      window.addEventListener('touchmove', moveDrag, { passive: false });
+      window.addEventListener('touchend', endDrag);
+
+      // Close Modal on outside click
+      overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) {
+          overlay.classList.remove('open');
+        }
+      });
+
+      // Consent Toggle
+      toggleBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+          toggleBtns.forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          consentValue = btn.dataset.value;
+        });
+      });
+
+      // Validation
+      const validate = () => {
+        const canSubmit =
+          recipientInput.value.trim().length > 0 &&
+          senderInput.value.trim().length > 0 &&
+          messageInput.value.trim().length > 0;
+        submitBtn.disabled = !canSubmit;
+      };
+
+      recipientInput.addEventListener('input', validate);
+      senderInput.addEventListener('input', validate);
+      messageInput.addEventListener('input', validate);
+
+      // Submit (ALWAYS create a new letter)
+      submitBtn.addEventListener('click', async () => {
+        if (!currentUser) {
+          alert('로그인 처리 중입니다. 잠시 후 다시 시도해 주세요.');
+          return;
+        }
+
+        const letterData = {
+          to: recipientInput.value.trim(),
+          from: senderInput.value.trim(),
+          content: messageInput.value.trim(),
+          consent: consentValue,
+          authorId: currentUser.uid,
+          createdAt: serverTimestamp()
         };
 
-        // Initialize Firebase
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-        const auth = getAuth(app);
+        submitBtn.disabled = true;
+        const originalText = submitBtn.innerText;
+        submitBtn.innerText = '저장 중...';
 
-        // Expose functions to window for user's preference
-        window.__db = db;
-        window.__collection = collection;
-        window.__addDoc = addDoc;
-        window.__updateDoc = updateDoc;
-        window.__doc = doc;
-        window.__serverTimestamp = serverTimestamp;
-        window.__query = query;
-        window.__where = where;
-        window.__getDocs = getDocs;
+        try {
+          await addDoc(collection(db, "letters"), letterData);
 
-        // Anonymous Sign-In
-        signInAnonymously(auth).catch((error) => {
-            console.error("Auth failed:", error);
-        });
-
-        (() => {
-            const pencil = document.getElementById('pencil');
-            const pad = document.getElementById('pad');
-            const overlay = document.getElementById('overlay');
-            const recipientInput = document.getElementById('recipient');
-            const senderInput = document.getElementById('sender');
-            const messageInput = document.getElementById('message');
-            const submitBtn = document.getElementById('submitBtn');
-            const toggleBtns = document.querySelectorAll('.toggle-btn');
-            const formContent = document.getElementById('form-content');
-            const successContent = document.getElementById('success-content');
-
-            let consentValue = 'yes';
-            let isDragging = false;
-            let startX, startY;
-            let initialLeft, initialTop;
-
-            let currentUser = null;
-            let existingLetterId = null;
-
-            // Fetch existing letter if any
-            onAuthStateChanged(auth, async (user) => {
-                if (user) {
-                    currentUser = user;
-                    try {
-                        const q = window.__query(
-                            window.__collection(window.__db, "letters"),
-                            window.__where("authorId", "==", user.uid)
-                        );
-                        const querySnapshot = await window.__getDocs(q);
-
-                        if (!querySnapshot.empty) {
-                            const docData = querySnapshot.docs[0].data();
-                            existingLetterId = querySnapshot.docs[0].id;
-
-                            // Pre-fill form
-                            recipientInput.value = docData.to || "";
-                            senderInput.value = docData.from || "";
-                            messageInput.value = docData.content || "";
-                            consentValue = docData.consent || "yes";
-
-                            // Update toggle buttons
-                            toggleBtns.forEach(btn => {
-                                btn.classList.toggle('active', btn.dataset.value === consentValue);
-                            });
-
-                            submitBtn.innerText = '수정하기';
-                            validate();
-                        }
-                    } catch (e) {
-                        console.error("Error fetching existing letter:", e);
-                    }
-                }
-            });
-
-            // Drag Logic
-            const startDrag = (e) => {
-                isDragging = true;
-                pencil.classList.add('dragging');
-
-                const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-                const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-
-                const rect = pencil.getBoundingClientRect();
-                startX = clientX;
-                startY = clientY;
-
-                // Store computed styles for current position
-                const style = window.getComputedStyle(pencil);
-                const matrix = new WebKitCSSMatrix(style.transform);
-                initialLeft = matrix.m41;
-                initialTop = matrix.m42;
-
-                // Also store the very first initial position if not already set
-                if (typeof pencil.dataset.originX === 'undefined') {
-                    pencil.dataset.originX = initialLeft;
-                    pencil.dataset.originY = initialTop;
-                }
-            };
-
-            const moveDrag = (e) => {
-                if (!isDragging) return;
-                e.preventDefault();
-
-                const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-                const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-
-                const dx = clientX - startX;
-                const dy = clientY - startY;
-
-                // Account for the initial transform position to prevent jumping
-                pencil.style.transform = `translate(${initialLeft + dx}px, ${initialTop + dy}px)`;
-            };
-
-            const endDrag = (e) => {
-                if (!isDragging) return;
-                isDragging = false;
-                pencil.classList.remove('dragging');
-
-                const pencilRect = pencil.getBoundingClientRect();
-                const padRect = pad.getBoundingClientRect();
-
-                // Check intersection with the pad (button)
-                const isOver = !(pencilRect.right < padRect.left ||
-                    pencilRect.left > padRect.right ||
-                    pencilRect.bottom < padRect.top ||
-                    pencilRect.top > padRect.bottom);
-
-                if (isOver) {
-                    overlay.classList.add('open');
-                    // Pencil stays where it was dropped (don't reset transform)
-                } else {
-                    // Snap back only if not over pad
-                    pencil.style.transform = `translate(${pencil.dataset.originX}px, ${pencil.dataset.originY}px)`;
-                }
-            };
-
-            pencil.addEventListener('mousedown', startDrag);
-            window.addEventListener('mousemove', moveDrag);
-            window.addEventListener('mouseup', endDrag);
-
-            pencil.addEventListener('touchstart', startDrag, { passive: false });
-            window.addEventListener('touchmove', moveDrag, { passive: false });
-            window.addEventListener('touchend', endDrag);
-
-            // Close Modal on outside click
-            overlay.addEventListener('click', (e) => {
-                if (e.target === overlay) {
-                    overlay.classList.remove('open');
-                }
-            });
-
-            // Consent Toggle
-            toggleBtns.forEach(btn => {
-                btn.addEventListener('click', () => {
-                    toggleBtns.forEach(b => b.classList.remove('active'));
-                    btn.classList.add('active');
-                    consentValue = btn.dataset.value;
-                });
-            });
-
-            // Validation
-            const validate = () => {
-                const canSubmit = recipientInput.value.trim().length > 0 &&
-                    senderInput.value.trim().length > 0 &&
-                    messageInput.value.trim().length > 0;
-                submitBtn.disabled = !canSubmit;
-            };
-
-            recipientInput.addEventListener('input', validate);
-            senderInput.addEventListener('input', validate);
-            messageInput.addEventListener('input', validate);
-
-            // Submit
-            submitBtn.addEventListener('click', async () => {
-                if (!currentUser) {
-                    alert('로그인 처리 중입니다. 잠시 후 다시 시도해 주세요.');
-                    return;
-                }
-
-                const letterData = {
-                    to: recipientInput.value.trim(),
-                    from: senderInput.value.trim(),
-                    content: messageInput.value.trim(),
-                    consent: consentValue,
-                    authorId: currentUser.uid,
-                    updatedAt: window.__serverTimestamp()
-                };
-
-                // Disable button and show loading
-                submitBtn.disabled = true;
-                const originalText = submitBtn.innerText;
-                submitBtn.innerText = '저장 중...';
-
-                try {
-                    if (existingLetterId) {
-                        // Update existing
-                        const docRef = window.__doc(window.__db, "letters", existingLetterId);
-                        await window.__updateDoc(docRef, letterData);
-                    } else {
-                        // Create new
-                        letterData.createdAt = window.__serverTimestamp();
-                        await window.__addDoc(window.__collection(window.__db, "letters"), letterData);
-                    }
-
-                    // Show Success State
-                    formContent.style.display = 'none';
-                    successContent.style.display = 'block';
-
-                    if (existingLetterId) {
-                        document.querySelector('.success-msg').innerText = '편지가 수정되었습니다!';
-                    }
-                } catch (e) {
-                    console.error('Failed to save letter:', e);
-                    alert('저장 중 오류가 발생했습니다. 다시 시도해 주세요.');
-                    submitBtn.disabled = false;
-                    submitBtn.innerText = originalText;
-                }
-            });
-        })();
-    </script>
+          formContent.style.display = 'none';
+          successContent.style.display = 'block';
+        } catch (e) {
+          console.error('Failed to save letter:', e);
+          alert('저장 중 오류가 발생했습니다. 다시 시도해 주세요.');
+          submitBtn.disabled = false;
+          submitBtn.innerText = originalText;
+        }
+      });
+    })();
+  </script>
 
 </body>
 
