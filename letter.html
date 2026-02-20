@@ -9,10 +9,11 @@
         html,
         body {
             margin: 0;
-            height: 100%;
+            min-height: 100vh;
             background: #bcbabc;
             font-family: system-ui, -apple-system, "Apple SD Gothic Neo", sans-serif;
-            overflow: hidden;
+            overflow-x: hidden;
+            overflow-y: auto;
         }
 
         * {
@@ -21,21 +22,16 @@
 
         .frame {
             width: min(100vw, calc(100vh * (390/844)));
-            aspect-ratio: 390/844;
+            min-height: 100vh;
             margin: auto;
             position: relative;
-            overflow: hidden;
             background: #bcbabc;
         }
 
         .bg {
-            position: absolute;
-            top: 0;
-            left: 0;
+            display: block;
             width: 100%;
-            height: 100%;
-            object-fit: contain;
-            object-position: top center;
+            height: auto;
             user-select: none;
             pointer-events: none;
         }
