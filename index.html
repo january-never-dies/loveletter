@@ -72,10 +72,22 @@
       -webkit-user-drag: none;
     }
 
-    /* 버튼 레이어만 클릭 가능하게 설정 */
+    /* 버튼 레이어 자체의 클릭 비활성화 (전체 화면이 잡히는 문제 해결) */
     .layer[src*="button.png"] {
-      pointer-events: auto;
+      pointer-events: none;
+    }
+
+    /* 새로운 GO! 버튼 전용 히트 영역 */
+    .go-hit-area {
+      position: absolute;
+      bottom: 2%;
+      right: 5%;
+      width: 140px;
+      height: 140px;
+      z-index: 999;
       cursor: pointer;
+      display: none;
+      /* 스크롤 끝 근처에서만 활성화 */
     }
 
     .layer.show {
@@ -131,6 +143,9 @@
         <img class="layer" data-start="2280" src="assets/tx_end02.png" alt="">
         <img class="layer" data-start="2380" src="assets/button.png" alt="">
 
+        <!-- 실제 클릭될 영역 (투명) -->
+        <div id="goBtn" class="go-hit-area"></div>
+
       </div>
     </div>
   </div>
@@ -148,7 +163,7 @@
     /***********************
      * ✅ 레이어 등장 타이밍 튜닝
      ***********************/
-    const REVEAL_AT = 0.75; // 화면 하단에서 조금 더 일찍 트리거 (부드러운 등장을 위해)
+    const REVEAL_AT = 0.85; // 화면 하단에서 조금 더 일찍 트리거 (모바일 가시성 확보)
     const LEAD = 50;        // 미리 등장 시키는 정도 조정
 
     /***********************
@@ -191,10 +206,14 @@
 
     // 버튼 클릭 이벤트 리스너 추가
     function initEvents() {
-      const btn = document.querySelector('.layer[src*="button.png"]');
-      if (btn) {
-        btn.addEventListener('click', () => {
-          window.location.href = 'sticker.html';
+      const goBtn = document.getElementById('goBtn');
+      if (goBtn) {
+        goBtn.addEventListener('click', () => {
+          // 마지막까지 스크롤했는지 확인 (95% 이상)
+          const y = window.scrollY || 0;
+          if (y >= MAX_TRANSLATE * 0.95) {
+            window.location.href = 'sticker.html';
+          }
         });
       }
     }
@@ -222,6 +241,17 @@
               img.classList.add('show');
             }
           }
+
+          // 히트 영역 활성화 제어 (거의 끝까지 왔을 때만 노출)
+          const goBtn = document.getElementById('goBtn');
+          if (goBtn) {
+            if (translateY >= MAX_TRANSLATE * 0.9) {
+              goBtn.style.display = 'block';
+            } else {
+              goBtn.style.display = 'none';
+            }
+          }
+
           isTicking = false;
         });
         isTicking = true;
