@@ -279,7 +279,43 @@
         </div>
     </div>
 
-    <script>
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
+        import { getFirestore, collection, addDoc, updateDoc, doc, serverTimestamp, query, where, getDocs } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
+
+        // TODO: Replace with your Firebase configuration from the guide
+        const firebaseConfig = {
+            apiKey: "AIzaSyBc-7tXKMNNPIeq2p7iCCpqPfBRNWbWbuU",
+            authDomain: "loveletter-f763f.firebaseapp.com",
+            projectId: "loveletter-f763f",
+            storageBucket: "loveletter-f763f.firebasestorage.app",
+            messagingSenderId: "47570140529",
+            appId: "1:47570140529:web:720f45982941768daa0ad0"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+
+        // Expose functions to window for user's preference
+        window.__db = db;
+        window.__collection = collection;
+        window.__addDoc = addDoc;
+        window.__updateDoc = updateDoc;
+        window.__doc = doc;
+        window.__serverTimestamp = serverTimestamp;
+        window.__query = query;
+        window.__where = where;
+        window.__getDocs = getDocs;
+
+        // Anonymous Sign-In
+        signInAnonymously(auth).catch((error) => {
+            console.error("Auth failed:", error);
+        });
+
         (() => {
             const pencil = document.getElementById('pencil');
             const pad = document.getElementById('pad');
@@ -296,6 +332,44 @@
             let isDragging = false;
             let startX, startY;
             let initialLeft, initialTop;
+
+            let currentUser = null;
+            let existingLetterId = null;
+
+            // Fetch existing letter if any
+            onAuthStateChanged(auth, async (user) => {
+                if (user) {
+                    currentUser = user;
+                    try {
+                        const q = window.__query(
+                            window.__collection(window.__db, "letters"),
+                            window.__where("authorId", "==", user.uid)
+                        );
+                        const querySnapshot = await window.__getDocs(q);
+
+                        if (!querySnapshot.empty) {
+                            const docData = querySnapshot.docs[0].data();
+                            existingLetterId = querySnapshot.docs[0].id;
+
+                            // Pre-fill form
+                            recipientInput.value = docData.to || "";
+                            senderInput.value = docData.from || "";
+                            messageInput.value = docData.content || "";
+                            consentValue = docData.consent || "yes";
+
+                            // Update toggle buttons
+                            toggleBtns.forEach(btn => {
+                                btn.classList.toggle('active', btn.dataset.value === consentValue);
+                            });
+
+                            submitBtn.innerText = '수정하기';
+                            validate();
+                        }
+                    } catch (e) {
+                        console.error("Error fetching existing letter:", e);
+                    }
+                }
+            });
 
             // Drag Logic
             const startDrag = (e) => {
@@ -396,27 +470,49 @@
             messageInput.addEventListener('input', validate);
 
             // Submit
-            submitBtn.addEventListener('click', () => {
+            submitBtn.addEventListener('click', async () => {
+                if (!currentUser) {
+                    alert('로그인 처리 중입니다. 잠시 후 다시 시도해 주세요.');
+                    return;
+                }
+
                 const letterData = {
                     to: recipientInput.value.trim(),
                     from: senderInput.value.trim(),
                     content: messageInput.value.trim(),
                     consent: consentValue,
-                    timestamp: new Date().toISOString()
+                    authorId: currentUser.uid,
+                    updatedAt: window.__serverTimestamp()
                 };
 
-                // Save to localStorage
+                // Disable button and show loading
+                submitBtn.disabled = true;
+                const originalText = submitBtn.innerText;
+                submitBtn.innerText = '저장 중...';
+
                 try {
-                    const existing = JSON.parse(localStorage.getItem('saved_letters') || '[]');
-                    existing.push(letterData);
-                    localStorage.setItem('saved_letters', JSON.stringify(existing));
+                    if (existingLetterId) {
+                        // Update existing
+                        const docRef = window.__doc(window.__db, "letters", existingLetterId);
+                        await window.__updateDoc(docRef, letterData);
+                    } else {
+                        // Create new
+                        letterData.createdAt = window.__serverTimestamp();
+                        await window.__addDoc(window.__collection(window.__db, "letters"), letterData);
+                    }
 
                     // Show Success State
                     formContent.style.display = 'none';
                     successContent.style.display = 'block';
+
+                    if (existingLetterId) {
+                        document.querySelector('.success-msg').innerText = '편지가 수정되었습니다!';
+                    }
                 } catch (e) {
                     console.error('Failed to save letter:', e);
                     alert('저장 중 오류가 발생했습니다. 다시 시도해 주세요.');
+                    submitBtn.disabled = false;
+                    submitBtn.innerText = originalText;
                 }
             });
         })();
