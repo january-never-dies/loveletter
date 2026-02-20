@@ -9,8 +9,10 @@
     html,
     body {
       margin: 0;
-      height: 100%;
+      min-height: 100vh;
       background: #bcbabc;
+      overflow-y: auto;
+      overflow-x: hidden;
     }
 
     * {
@@ -168,6 +170,222 @@
       display: block;
       opacity: 1;
     }
+
+    /* ===== Slider for A & D ===== */
+    .slider-outer {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 1/1;
+      /* 1080/1350(0.8) -> 1/1(1) 로 변경하여 팝업 내 스크롤 방지 */
+      overflow: hidden;
+      border-radius: 14px;
+      background: #fdfdfd;
+      touch-action: pan-y;
+    }
+
+    .slider-container {
+      display: flex;
+      width: 100%;
+      height: 100%;
+      transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    }
+
+    .slide {
+      flex: 0 0 100%;
+      width: 100%;
+      height: 100%;
+    }
+
+    .slide img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      border-radius: 0;
+      /* 슬라이더 내부 이미지는 컨테이너 라운딩 따름 */
+      display: block;
+    }
+
+    /* 3D Flip Card Styles */
+    .slide-outer {
+      width: 100%;
+      height: 100%;
+      perspective: 1000px;
+      cursor: pointer;
+    }
+
+    .slide-inner {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+      transform-style: preserve-3d;
+    }
+
+    .slide-outer.flipped .slide-inner {
+      transform: rotateY(180deg);
+    }
+
+    .slide-front,
+    .slide-back {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      backface-visibility: hidden;
+      border-radius: 14px;
+      overflow: hidden;
+    }
+
+    .slide-front {
+      background: #fff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .slide-front img {
+      width: auto;
+      height: 45%;
+      /* 향수병 크기 축소 */
+      object-fit: contain;
+      margin-bottom: 20px;
+      filter: drop-shadow(0 10px 20px rgba(0, 0, 0, 0.05));
+    }
+
+    .front-brand {
+      font-size: 11px;
+      color: #999;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 4px;
+    }
+
+    .front-name {
+      font-size: 16px;
+      font-weight: 700;
+      color: #333;
+      text-align: center;
+      padding: 0 10px;
+    }
+
+    .slide-back {
+      transform: rotateY(180deg);
+      background: linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      text-align: center;
+      box-shadow: inset 0 0 40px rgba(0, 0, 0, 0.05);
+      z-index: 1;
+    }
+
+    .perfume-tag {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: #999;
+      margin-bottom: 8px;
+    }
+
+    .perfume-name {
+      font-size: 22px;
+      font-weight: 800;
+      color: #222;
+      margin-bottom: 12px;
+      line-height: 1.2;
+    }
+
+    .perfume-divider {
+      width: 30px;
+      height: 1px;
+      background: #000;
+      margin-bottom: 16px;
+    }
+
+    .perfume-desc {
+      font-size: 14px;
+      line-height: 1.6;
+      color: #555;
+      word-break: keep-all;
+    }
+
+    .click-tip {
+      position: absolute;
+      bottom: 20px;
+      font-size: 10px;
+      color: #aaa;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0% {
+        opacity: 0.4;
+      }
+
+      50% {
+        opacity: 1;
+      }
+
+      100% {
+        opacity: 0.4;
+      }
+    }
+
+    .nav-btn {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 36px;
+      height: 36px;
+      background: rgba(255, 255, 255, 0.8);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      z-index: 10;
+      border: none;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      font-size: 18px;
+    }
+
+    .nav-btn:active {
+      background: #fff;
+    }
+
+    .prev-btn {
+      left: 10px;
+    }
+
+    .next-btn {
+      right: 10px;
+    }
+
+    .dots-container {
+      position: absolute;
+      bottom: 12px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 8px;
+      z-index: 10;
+    }
+
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.5);
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    .dot.active {
+      background: #fff;
+    }
   </style>
 </head>
 
@@ -215,24 +433,32 @@
       // - html: 자유롭게 텍스트/링크 등 넣기 (짧게)
       const CONTENT = {
         A: {
-          title: "A — Strawberry Cake",
-          image: "assets/content_A.jpg",
-          caption: "여기에 A 설명/문장 넣기"
+          title: "My sweetie loves sweet things.",
+          images: ["assets/cake_0.png", "assets/cake_1.png", "assets/cake_2.png"],
+          caption: "260101과 키친205."
         },
         B: {
-          title: "B — R&B",
+          title: "여유로운 현서의 여유로운 R&B 플레이리스트.",
           youtube: "s8fcHQ-SUrE",
-          caption: "여기에 B 설명/문장 넣기\n\n(영상 재생이 안 될 경우 아래 링크를 클릭해주세요!)"
+          caption: "부드럽고 감각적인 무드를 사랑하는 도영이를 위한 R&B 플레이리스트입니다. 깊이 있는 리듬과 감미로운 선율에 몸을 맡겨보세요.\n\n[Tracklist 💿]\n0:00 Bungee - 백현\n3:21 Make up - Sam Kim\n6:43 Open Arms - SZA\n9:41 trippin’ - thuy\n12:01 Toronto 2014 - Daniel Caesar\n16:35 Come Around Me - Justin Bieber"
         },
         C: {
-          title: "C — Caution",
+          title: "Different rings everyday",
           image: "assets/st_A_ring.gif",
-          caption: "여기에 C 설명/문장 넣기"
+          caption: "주얼리 파우치를 들고 다니며 날마다 반지를 바꿔낀다고 한다."
         },
         D: {
-          title: "D — Scent Obsessed",
-          youtube: "GLog53sA-XY",
-          caption: "향기에 진심인 도영이의 기록!"
+          title: "The Scent of Memories",
+          items: [
+            { src: "assets/per_maejong.png", name: "Replica Jazz Club", brand: "Maison Margiela", desc: "겨울에 자주 사용하는 향수로, 현재 거의 세 통째 사용 중이다. 의외로 중성적인 향으로 느껴진다고 한다." },
+            { src: "assets/per_missdior.png", name: "Miss Dior Blooming Bouquet", brand: "Dior", desc: "데뷔 초에 많이 사용했던 향수로 언급했다." },
+            { src: "assets/per_lipsaeng.png", name: "Libre", brand: "YSL", desc: "현서가 세 통째 사용 중인 향수와 향이 비슷해 한동안 자주 사용했다고 한다." },
+            { src: "assets/per_ell.png", name: "H24", brand: "Hermes", desc: "현서 피셜 어른스러운 향수. 어른스러운(?) 분위기를 내고 싶을 때 사용하며, 이것 역시 두 통째 사용 중." },
+            { src: "assets/per_rose.png", name: "Portrait of a Lady", brand: "Frederic Malle", desc: "작년 여름 라이브 방송에서 현서가 직접 소개한 향수. 계절마다 향수를 바꿔 사용한다고 했을 때, 이 향은 2025년 여름 향수로 언급되었다." },
+            { src: "assets/per_gucci.png", name: "Alchemist's Garden A Floral Verse", brand: "Gucci", desc: "롤라팔루자 파리에 다녀오며 구매한 향수라고 한다." },
+            { src: "assets/per_vio.png", name: "Violet Multi Perfume", brand: "Granhand", desc: "꽃향이 뚜렷한 향으로, 옷에 가볍게 뿌리면 잔향이 좋아 자주 사용한다고 한다." }
+          ],
+          caption: "향수병을 클릭해보세요!"
         },
       };
 
@@ -282,7 +508,11 @@
 
           // 콘텐츠 렌더
           let html = "";
-          if (data.image) {
+          if (data.items && Array.isArray(data.items)) {
+            html += renderSlider(data.items, true);
+          } else if (data.images && Array.isArray(data.images)) {
+            html += renderSlider(data.images);
+          } else if (data.image) {
             html += `<img src="${data.image}" alt="">`;
           }
           if (data.video) {
@@ -292,9 +522,6 @@
             html += `<div class="video-container">
           <iframe src="https://www.youtube-nocookie.com/embed/${data.youtube}?rel=0" title="YouTube video player" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
         </div>`;
-            html += `<div style="margin-top:10px; text-align:center;">
-          <a href="https://www.youtube.com/watch?v=${data.youtube}" target="_blank" style="color:#007AFF; font-size:13px; text-decoration:none; font-weight:600;">📺 YouTube에서 직접 보기</a>
-        </div>`;
           }
           if (data.html) {
             html += data.html;
@@ -303,6 +530,10 @@
             html += `<div class="caption">${escapeHTML(data.caption)}</div>`;
           }
           modalBody.innerHTML = html;
+
+          if ((data.images && Array.isArray(data.images)) || (data.items && Array.isArray(data.items))) {
+            setupSlider();
+          }
         }
 
         overlay.classList.add('open');
@@ -353,6 +584,95 @@
       window.addEventListener('keydown', (e) => {
         if (e.key === "Escape" && overlay.classList.contains('open')) closeModal();
       });
+
+      function renderSlider(data, isInteractive = false) {
+        let slides = data.map((item, i) => {
+          const src = typeof item === 'string' ? item : item.src;
+          if (isInteractive) {
+            return `
+              <div class="slide">
+                <div class="slide-outer" onclick="this.classList.toggle('flipped')">
+                  <div class="slide-inner">
+                    <div class="slide-front">
+                      <img src="${src}" alt="">
+                      <div class="front-brand">${item.brand}</div>
+                      <div class="front-name">${item.name}</div>
+                      <div class="click-tip">Tap to reveal info</div>
+                    </div>
+                    <div class="slide-back">
+                      <div class="perfume-desc">${item.desc}</div>
+                    </div>
+                  </div>
+                </div>
+              </div>`;
+          }
+          return `<div class="slide"><img src="${src}" alt=""></div>`;
+        }).join("");
+
+        let dots = data.map((_, i) => `<div class="dot ${i === 0 ? 'active' : ''}" data-idx="${i}"></div>`).join("");
+        return `
+          <div class="slider-outer" id="sliderOuter">
+            <div class="slider-container" id="sliderContainer">
+              ${slides}
+            </div>
+            <button class="nav-btn prev-btn">❮</button>
+            <button class="nav-btn next-btn">❯</button>
+            <div class="dots-container">
+              ${dots}
+            </div>
+          </div>
+        `;
+      }
+
+      function setupSlider() {
+        const container = document.getElementById('sliderContainer');
+        const outer = document.getElementById('sliderOuter');
+        const dots = outer.querySelectorAll('.dot');
+        const prevBtn = outer.querySelector('.prev-btn');
+        const nextBtn = outer.querySelector('.next-btn');
+        let currentIndex = 0;
+        const totalSlides = dots.length;
+
+        function updateSlider() {
+          container.style.transform = `translateX(-${currentIndex * 100}%)`;
+          dots.forEach((dot, i) => dot.classList.toggle('active', i === currentIndex));
+        }
+
+        function goNext() {
+          currentIndex = (currentIndex + 1) % totalSlides;
+          updateSlider();
+        }
+
+        function goPrev() {
+          currentIndex = (currentIndex - 1 + totalSlides) % totalSlides;
+          updateSlider();
+        }
+
+        nextBtn.addEventListener('click', goNext);
+        prevBtn.addEventListener('click', goPrev);
+
+        dots.forEach(dot => {
+          dot.addEventListener('click', () => {
+            currentIndex = parseInt(dot.dataset.idx);
+            updateSlider();
+          });
+        });
+
+        // Swipe (Mobile)
+        let startX = 0;
+        outer.addEventListener('touchstart', (e) => {
+          startX = e.touches[0].clientX;
+        }, { passive: true });
+
+        outer.addEventListener('touchend', (e) => {
+          let endX = e.changedTouches[0].clientX;
+          let diff = startX - endX;
+          if (Math.abs(diff) > 50) {
+            if (diff > 0) goNext();
+            else goPrev();
+          }
+        }, { passive: true });
+      }
 
       function escapeHTML(s) {
         return String(s)
