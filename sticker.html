@@ -9,7 +9,6 @@
     html, body { margin:0; height:100%; background:#000; }
     * { box-sizing:border-box; }
 
-    /* 390x844 비율 프레임 */
     .frame{
       width:min(100vw, calc(100vh * (390/844)));
       aspect-ratio:390/844;
@@ -17,7 +16,6 @@
       position:relative;
       overflow:hidden;
       background:#111;
-      touch-action:none;
     }
 
     .bg{
@@ -28,46 +26,54 @@
       pointer-events:none;
     }
 
-    /* 스티커 “자리” 래퍼 */
     .slotWrap{
       position:absolute;
       transform-origin:center center;
       will-change:transform;
     }
 
-    /* 스티커 이미지 */
     .slotWrap .stImg{
       position:absolute; inset:0;
       width:100%; height:100%;
       user-select:none;
       -webkit-user-drag:none;
       cursor:pointer;
+      touch-action:manipulation;
       transition:opacity .18s ease;
       will-change:transform, opacity;
     }
 
-    /* 스티커가 떼진 자리를 만드는 흰 레이어 (스티커 PNG를 mask로 재사용) */
+    /* 흰 자리 레이어: "mask 준비 전에는 절대 보이지 않게" */
     .slotWrap .hole{
       position:absolute; inset:0;
       background:#fff;
       opacity:0;
       transition:opacity .18s ease;
 
+      /* mask 설정(나중에 JS가 url 주입) */
       -webkit-mask-repeat:no-repeat;
       -webkit-mask-position:center;
       -webkit-mask-size:100% 100%;
-
               mask-repeat:no-repeat;
               mask-position:center;
               mask-size:100% 100%;
+
+      /* ✅ 마스크 준비 전에는 숨김 (흰 네모 방지) */
+      display:none;
     }
 
-    /* 방문(떼짐) 상태: 스티커는 사라지고, 흰 자리는 남음 */
+    /* ✅ 마스크 준비 완료된 경우에만 hole을 렌더 */
+    .slotWrap.maskReady .hole{
+      display:block;
+    }
+
+    /* 방문(떼짐) 상태 */
     .slotWrap.visited .stImg{
       opacity:0;
       pointer-events:none;
     }
-    .slotWrap.visited .hole{
+    /* ✅ visited여도 maskReady여야만 흰 자리 표시 */
+    .slotWrap.visited.maskReady .hole{
       opacity:1;
     }
 
@@ -103,7 +109,6 @@
       animation:pop .18s ease;
       font-family:system-ui, -apple-system, "Apple SD Gothic Neo", sans-serif;
     }
-
     @keyframes pop{
       from{ transform:scale(.96); opacity:0; }
       to{ transform:scale(1); opacity:1; }
@@ -153,7 +158,6 @@
       height:100%;
       border:0;
     }
-
     .caption{
       margin-top:12px;
       font-size:13px;
@@ -161,41 +165,52 @@
       opacity:.85;
       white-space:pre-wrap;
     }
+
+    /* Reset 버튼 (디버깅용/운영용) */
+    .resetBtn{
+      position:fixed;
+      right:12px;
+      bottom:12px;
+      z-index:10000;
+      border:0;
+      border-radius:12px;
+      padding:10px 12px;
+      font-weight:900;
+      background:rgba(255,255,255,.92);
+      color:#000;
+      cursor:pointer;
+      backdrop-filter:blur(10px);
+    }
   </style>
 </head>
 
 <body>
   <div class="frame" id="frame">
-    <!-- 배경 -->
     <img class="bg" src="assets/st_bg.png" alt="" fetchpriority="high" decoding="async">
 
-    <!-- A~D: st_layout 기준 배치 -->
-    <div class="slotWrap" data-id="A"
-      style="left:2.05%; top:19.55%; width:73.08%; transform:rotate(0deg);">
+    <div class="slotWrap" data-id="A" style="left:2.05%; top:19.55%; width:73.08%; transform:rotate(0deg);">
       <div class="hole"></div>
       <img class="stImg" src="assets/st_A.png" alt="" decoding="async">
     </div>
 
-    <div class="slotWrap" data-id="B"
-      style="left:22.31%; top:29.74%; width:70.77%; transform:rotate(-24.5deg);">
+    <div class="slotWrap" data-id="B" style="left:22.31%; top:29.74%; width:70.77%; transform:rotate(-24.5deg);">
       <div class="hole"></div>
       <img class="stImg" src="assets/st_B.png" alt="" decoding="async">
     </div>
 
-    <div class="slotWrap" data-id="C"
-      style="left:3.08%; top:49.05%; width:63.85%; transform:rotate(18.8deg);">
+    <div class="slotWrap" data-id="C" style="left:3.08%; top:49.05%; width:63.85%; transform:rotate(18.8deg);">
       <div class="hole"></div>
       <img class="stImg" src="assets/st_C.png" alt="" decoding="async">
     </div>
 
-    <div class="slotWrap" data-id="D"
-      style="left:3.33%; top:73.34%; width:81.79%; transform:rotate(-4.8deg);">
+    <div class="slotWrap" data-id="D" style="left:3.33%; top:73.34%; width:81.79%; transform:rotate(-4.8deg);">
       <div class="hole"></div>
       <img class="stImg" src="assets/st_D.png" alt="" decoding="async">
     </div>
   </div>
 
-  <!-- Modal -->
+  <button class="resetBtn" id="resetBtn">Reset</button>
+
   <div class="overlay" id="overlay" aria-hidden="true">
     <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
       <div class="modalHeader">
@@ -208,74 +223,30 @@
 
   <script>
   (() => {
-    // ====== 콘텐츠 설정: 여기만 채우면 됨 ======
-    // youtube: 영상ID만 넣기 (youtu.be/ID?si=... 에서 ID 부분)
     const CONTENT = {
-      A: {
-        title: "Sticker A",
-        youtube: "s8fcHQ-SUrE", // ✅ 네 링크에서 추출한 ID
-        caption: "여기에 A 설명/문장 넣기"
-      },
-      B: {
-        title: "Sticker B",
-        caption: "B는 나중에 이미지/영상 넣어도 됨"
-        // 예: youtube: "dQw4w9WgXcQ"
-        // 예: image: "assets/content_B.jpg"
-      },
-      C: {
-        title: "Sticker C",
-        caption: "C 텍스트"
-      },
-      D: {
-        title: "Sticker D",
-        caption: "D 텍스트"
-      },
+      A: { title: "Sticker A", youtube: "s8fcHQ-SUrE", caption: "A 설명" },
+      B: { title: "Sticker B", caption: "B 설명" },
+      C: { title: "Sticker C", caption: "C 설명" },
+      D: { title: "Sticker D", caption: "D 설명" },
     };
 
-    // ====== 방문 저장 키 ======
     const VISIT_KEY = "visited_stickers_v1";
     const readVisits = () => { try { return JSON.parse(localStorage.getItem(VISIT_KEY) || "{}"); } catch { return {}; } };
     const writeVisits = (v) => localStorage.setItem(VISIT_KEY, JSON.stringify(v));
 
-    // ====== 엘리먼트 ======
     const overlay = document.getElementById("overlay");
     const closeBtn = document.getElementById("closeBtn");
     const modalTitle = document.getElementById("modalTitle");
     const modalBody = document.getElementById("modalBody");
-    const wraps = [...document.querySelectorAll(".slotWrap")];
+    const resetBtn = document.getElementById("resetBtn");
 
+    const wraps = [...document.querySelectorAll(".slotWrap")];
     let currentStickerId = null;
 
-    // ====== 스티커 PNG를 hole 마스크로 재사용 + 높이 자동 맞춤 ======
-    function setupWrap(wrap){
-      const img = wrap.querySelector(".stImg");
-      const hole = wrap.querySelector(".hole");
-
-      // 마스크 = 스티커 png
-      const src = img.getAttribute("src");
-      hole.style.webkitMaskImage = `url(${src})`;
-      hole.style.maskImage = `url(${src})`;
-
-      // wrap 높이를 이미지 비율로 자동 계산
-      const applySize = () => {
-        if(!img.naturalWidth || !img.naturalHeight) return;
-        const ratio = img.naturalHeight / img.naturalWidth; // h/w
-        const pxW = wrap.getBoundingClientRect().width;
-        wrap.style.height = (pxW * ratio) + "px";
-      };
-
-      if(img.complete) applySize();
-      else img.addEventListener("load", applySize);
-
-      window.addEventListener("resize", applySize);
-
-      // 클릭하면 모달 오픈
-      img.addEventListener("click", () => openModal(wrap.dataset.id));
+    function escapeHTML(s){
+      return String(s).replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;");
     }
 
-    wraps.forEach(setupWrap);
-
-    // ====== 방문 적용 ======
     function applyVisited(){
       const visited = readVisits();
       wraps.forEach(w=>{
@@ -284,25 +255,45 @@
         else w.classList.remove("visited");
       });
     }
-    applyVisited();
 
-    // ====== 모달 렌더 ======
-    function escapeHTML(s){
-      return String(s)
-        .replaceAll("&","&amp;")
-        .replaceAll("<","&lt;")
-        .replaceAll(">","&gt;");
+    function setupWrap(wrap){
+      const img = wrap.querySelector(".stImg");
+      const hole = wrap.querySelector(".hole");
+
+      const src = img.getAttribute("src");
+      hole.style.webkitMaskImage = `url(${src})`;
+      hole.style.maskImage = `url(${src})`;
+
+      const applySize = () => {
+        if(!img.naturalWidth || !img.naturalHeight) return;
+        const ratio = img.naturalHeight / img.naturalWidth;
+        const pxW = wrap.getBoundingClientRect().width;
+        wrap.style.height = (pxW * ratio) + "px";
+      };
+
+      const onReady = () => {
+        wrap.classList.add("maskReady"); // ✅ 마스크 준비 완료 표시
+        applySize();
+        applyVisited(); // ✅ 마스크 준비된 뒤에 visited 적용 → 흰 네모 선출현 방지
+      };
+
+      if(img.complete && img.naturalWidth) onReady();
+      else img.addEventListener("load", onReady);
+
+      window.addEventListener("resize", applySize);
+
+      img.addEventListener("click", () => openModal(wrap.dataset.id));
     }
+
+    wraps.forEach(setupWrap);
 
     function openModal(id){
       currentStickerId = id;
-
       const data = CONTENT[id] || { title: `Sticker ${id}`, caption: "콘텐츠가 아직 없음" };
-      modalTitle.textContent = data.title || `Sticker ${id}`;
 
+      modalTitle.textContent = data.title || `Sticker ${id}`;
       let html = "";
 
-      // 유튜브
       if(data.youtube){
         html += `
           <div class="videoWrap">
@@ -315,12 +306,10 @@
         `;
       }
 
-      // (옵션) 나중에 이미지 넣고 싶으면: data.image = "assets/xxx.jpg"
       if(data.image){
         html += `<img src="${data.image}" alt="" style="width:100%;border-radius:16px;display:block;">`;
       }
 
-      // 텍스트
       if(data.caption){
         html += `<div class="caption">${escapeHTML(data.caption)}</div>`;
       }
@@ -331,16 +320,13 @@
     }
 
     function markVisited(id){
-      // localStorage 저장
       const v = readVisits();
       v[id] = true;
       writeVisits(v);
 
-      // 애니메이션 → visited 상태로 전환
       const w = document.querySelector(`.slotWrap[data-id="${id}"]`);
       if(!w) return;
 
-      // 이미 visited면 스킵
       if(w.classList.contains("visited")) return;
 
       w.classList.add("peeling");
@@ -355,24 +341,21 @@
       overlay.setAttribute("aria-hidden","true");
       modalBody.innerHTML = "";
 
-      // ✅ 닫을 때 “떼짐” 처리
       if(currentStickerId){
         markVisited(currentStickerId);
         currentStickerId = null;
       }
     }
 
-    // 닫기 동작들
     closeBtn.addEventListener("click", closeModal);
-    overlay.addEventListener("click", (e)=>{
-      if(e.target === overlay) closeModal(); // 바깥 클릭 닫기
-    });
-    window.addEventListener("keydown", (e)=>{
-      if(e.key === "Escape" && overlay.classList.contains("open")) closeModal();
-    });
+    overlay.addEventListener("click", (e)=>{ if(e.target === overlay) closeModal(); });
+    window.addEventListener("keydown", (e)=>{ if(e.key === "Escape" && overlay.classList.contains("open")) closeModal(); });
 
-    // 디버깅용: 콘솔에서 초기화 가능
-    // localStorage.removeItem(VISIT_KEY); location.reload();
+    resetBtn.addEventListener("click", ()=>{
+      localStorage.removeItem(VISIT_KEY);
+      wraps.forEach(w => w.classList.remove("visited"));
+      alert("초기화 완료!");
+    });
   })();
   </script>
 </body>
