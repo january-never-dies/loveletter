@@ -4,7 +4,6 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>Sticker Board</title>
-
   <style>
     html, body { margin:0; height:100%; background:#000; }
     * { box-sizing:border-box; }
@@ -17,115 +16,57 @@
       overflow:hidden;
       background:#111;
     }
-
     .bg{
       position:absolute; inset:0;
       width:100%; height:100%;
       object-fit:cover;
-      user-select:none;
-      pointer-events:none;
+      user-select:none; pointer-events:none;
     }
-
-    .slotWrap{
+    .sticker{
       position:absolute;
       transform-origin:center center;
-      will-change:transform;
-    }
-
-    .slotWrap .stImg{
-      position:absolute; inset:0;
-      width:100%; height:100%;
       user-select:none;
       -webkit-user-drag:none;
       cursor:pointer;
-      touch-action:manipulation;
-      transition:opacity .18s ease;
-      will-change:transform, opacity;
+      transition:transform .12s ease, opacity .2s ease;
+      will-change:transform;
     }
-
-    /* 흰 자리 레이어: "mask 준비 전에는 절대 보이지 않게" */
-    .slotWrap .hole{
-      position:absolute; inset:0;
-      background:#fff;
-      opacity:0;
-      transition:opacity .18s ease;
-
-      /* mask 설정(나중에 JS가 url 주입) */
-      -webkit-mask-repeat:no-repeat;
-      -webkit-mask-position:center;
-      -webkit-mask-size:100% 100%;
-              mask-repeat:no-repeat;
-              mask-position:center;
-              mask-size:100% 100%;
-
-      /* ✅ 마스크 준비 전에는 숨김 (흰 네모 방지) */
-      display:none;
-    }
-
-    /* ✅ 마스크 준비 완료된 경우에만 hole을 렌더 */
-    .slotWrap.maskReady .hole{
-      display:block;
-    }
-
-    /* 방문(떼짐) 상태 */
-    .slotWrap.visited .stImg{
-      opacity:0;
-      pointer-events:none;
-    }
-    /* ✅ visited여도 maskReady여야만 흰 자리 표시 */
-    .slotWrap.visited.maskReady .hole{
-      opacity:1;
-    }
-
-    /* 떼지는 애니메이션 */
-    .slotWrap.peeling .stImg{
-      animation: peel .22s ease forwards;
-    }
-    @keyframes peel{
-      from { transform:translateY(0) scale(1); opacity:1; }
-      to   { transform:translateY(-8px) scale(1.06); opacity:0; }
-    }
+    .sticker:active{ transform: scale(0.98) rotate(var(--rot, 0deg)); }
 
     /* ===== Modal ===== */
     .overlay{
       position:fixed;
       inset:0;
-      background:rgba(0,0,0,.60);
+      background:rgba(0,0,0,.55);
       display:none;
       align-items:center;
       justify-content:center;
-      padding:16px;
+      padding:18px;
       z-index:9999;
     }
     .overlay.open{ display:flex; }
 
     .modal{
       width:min(560px, 100%);
-      max-height:82vh;
+      max-height:min(80vh, 720px);
       background:#fff;
-      border-radius:22px;
+      border-radius:18px;
       overflow:hidden;
-      box-shadow:0 24px 90px rgba(0,0,0,.45);
-      animation:pop .18s ease;
+      box-shadow:0 20px 80px rgba(0,0,0,.35);
       font-family:system-ui, -apple-system, "Apple SD Gothic Neo", sans-serif;
     }
-    @keyframes pop{
-      from{ transform:scale(.96); opacity:0; }
-      to{ transform:scale(1); opacity:1; }
-    }
-
     .modalHeader{
       display:flex;
       align-items:center;
       justify-content:space-between;
-      gap:12px;
-      padding:14px 16px 10px;
+      gap:10px;
+      padding:12px 14px;
       border-bottom:1px solid rgba(0,0,0,.08);
     }
     .modalTitle{
       font-weight:900;
-      font-size:13px;
-      letter-spacing:.3px;
+      font-size:14px;
+      letter-spacing:.2px;
     }
     .closeBtn{
       border:0;
@@ -135,82 +76,52 @@
       padding:8px 10px;
       font-weight:800;
       cursor:pointer;
-      white-space:nowrap;
     }
-
     .modalBody{
-      padding:14px 16px 16px;
+      padding:14px;
       overflow:auto;
-      max-height:calc(82vh - 56px);
+      max-height:calc(min(80vh, 720px) - 54px);
     }
 
-    .videoWrap{
-      position:relative;
-      padding-top:56.25%;
-      border-radius:16px;
-      overflow:hidden;
+    /* 콘텐츠 기본 스타일 */
+    .modalBody img{
+      width:100%;
+      height:auto;
+      border-radius:14px;
+      display:block;
+    }
+    .modalBody video{
+      width:100%;
+      border-radius:14px;
+      display:block;
       background:#000;
     }
-    .videoWrap iframe{
-      position:absolute;
-      inset:0;
-      width:100%;
-      height:100%;
-      border:0;
-    }
     .caption{
-      margin-top:12px;
+      margin-top:10px;
       font-size:13px;
-      line-height:1.6;
+      line-height:1.5;
       opacity:.85;
       white-space:pre-wrap;
     }
-
-    /* Reset 버튼 (디버깅용/운영용) */
-    .resetBtn{
-      position:fixed;
-      right:12px;
-      bottom:12px;
-      z-index:10000;
-      border:0;
-      border-radius:12px;
-      padding:10px 12px;
-      font-weight:900;
-      background:rgba(255,255,255,.92);
-      color:#000;
-      cursor:pointer;
-      backdrop-filter:blur(10px);
-    }
   </style>
 </head>
-
 <body>
+
   <div class="frame" id="frame">
     <img class="bg" src="assets/st_bg.png" alt="" fetchpriority="high" decoding="async">
 
-    <div class="slotWrap" data-id="A" style="left:2.05%; top:19.55%; width:73.08%; transform:rotate(0deg);">
-      <div class="hole"></div>
-      <img class="stImg" src="assets/st_A.png" alt="" decoding="async">
-    </div>
-
-    <div class="slotWrap" data-id="B" style="left:22.31%; top:29.74%; width:70.77%; transform:rotate(-24.5deg);">
-      <div class="hole"></div>
-      <img class="stImg" src="assets/st_B.png" alt="" decoding="async">
-    </div>
-
-    <div class="slotWrap" data-id="C" style="left:3.08%; top:49.05%; width:63.85%; transform:rotate(18.8deg);">
-      <div class="hole"></div>
-      <img class="stImg" src="assets/st_C.png" alt="" decoding="async">
-    </div>
-
-    <div class="slotWrap" data-id="D" style="left:3.33%; top:73.34%; width:81.79%; transform:rotate(-4.8deg);">
-      <div class="hole"></div>
-      <img class="stImg" src="assets/st_D.png" alt="" decoding="async">
-    </div>
+    <!-- 배치값: st_layout 기준 -->
+    <img class="sticker" data-id="A" src="assets/st_A.png"
+      style="left:2.05%; top:19.55%; width:73.08%; --rot:0deg; transform:rotate(0deg);" alt="" decoding="async">
+    <img class="sticker" data-id="B" src="assets/st_B.png"
+      style="left:22.31%; top:29.74%; width:70.77%; --rot:-24.5deg; transform:rotate(-24.5deg);" alt="" decoding="async">
+    <img class="sticker" data-id="C" src="assets/st_C.png"
+      style="left:3.08%; top:49.05%; width:63.85%; --rot:18.8deg; transform:rotate(18.8deg);" alt="" decoding="async">
+    <img class="sticker" data-id="D" src="assets/st_D.png"
+      style="left:3.33%; top:73.34%; width:81.79%; --rot:-4.8deg; transform:rotate(-4.8deg);" alt="" decoding="async">
   </div>
 
-  <button class="resetBtn" id="resetBtn">Reset</button>
-
+  <!-- Modal -->
   <div class="overlay" id="overlay" aria-hidden="true">
     <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
       <div class="modalHeader">
@@ -221,142 +132,122 @@
     </div>
   </div>
 
-  <script>
-  (() => {
-    const CONTENT = {
-      A: { title: "Sticker A", youtube: "s8fcHQ-SUrE", caption: "A 설명" },
-      B: { title: "Sticker B", caption: "B 설명" },
-      C: { title: "Sticker C", caption: "C 설명" },
-      D: { title: "Sticker D", caption: "D 설명" },
-    };
+<script>
+(() => {
+  const overlay = document.getElementById('overlay');
+  const closeBtn = document.getElementById('closeBtn');
+  const modalTitle = document.getElementById('modalTitle');
+  const modalBody = document.getElementById('modalBody');
 
-    const VISIT_KEY = "visited_stickers_v1";
-    const readVisits = () => { try { return JSON.parse(localStorage.getItem(VISIT_KEY) || "{}"); } catch { return {}; } };
-    const writeVisits = (v) => localStorage.setItem(VISIT_KEY, JSON.stringify(v));
+  // ✅ 여기만 바꾸면 됨: 스티커별로 보여줄 콘텐츠 정의
+  // - image: 이미지 파일 경로
+  // - video: 영상 파일 경로(mp4 권장)
+  // - html: 자유롭게 텍스트/링크 등 넣기 (짧게)
+  const CONTENT = {
+    A: {
+      title: "A — Strawberry Cake",
+      image: "assets/content_A.jpg",
+      caption: "여기에 A 설명/문장 넣기"
+    },
+    B: {
+      title: "B — R&B",
+      video: "assets/content_B.mp4",
+      caption: "여기에 B 설명/문장 넣기"
+    },
+    C: {
+      title: "C — Caution",
+      image: "assets/content_C.jpg",
+      caption: "여기에 C 설명/문장 넣기"
+    },
+    D: {
+      title: "D — Scent Obsessed",
+      image: "assets/content_D.jpg",
+      caption: "여기에 D 설명/문장 넣기"
+    },
+  };
 
-    const overlay = document.getElementById("overlay");
-    const closeBtn = document.getElementById("closeBtn");
-    const modalTitle = document.getElementById("modalTitle");
-    const modalBody = document.getElementById("modalBody");
-    const resetBtn = document.getElementById("resetBtn");
+  // (옵션) 보고 나온 스티커를 숨기고 싶으면 true
+  const HIDE_AFTER_OPEN = false;
+  const VISIT_KEY = "visited_stickers_v1";
+  const readVisits = () => { try { return JSON.parse(localStorage.getItem(VISIT_KEY) || "{}"); } catch { return {}; } };
+  const writeVisits = (v) => localStorage.setItem(VISIT_KEY, JSON.stringify(v));
 
-    const wraps = [...document.querySelectorAll(".slotWrap")];
-    let currentStickerId = null;
+  const stickers = [...document.querySelectorAll('.sticker')];
 
-    function escapeHTML(s){
-      return String(s).replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;");
-    }
+  function applyVisited(){
+    if(!HIDE_AFTER_OPEN) return;
+    const visited = readVisits();
+    stickers.forEach(el=>{
+      if(visited[el.dataset.id]) el.style.opacity = "0";
+      if(visited[el.dataset.id]) el.style.pointerEvents = "none";
+    });
+  }
 
-    function applyVisited(){
-      const visited = readVisits();
-      wraps.forEach(w=>{
-        const id = w.dataset.id;
-        if(visited[id]) w.classList.add("visited");
-        else w.classList.remove("visited");
-      });
-    }
+  function openModal(id){
+    const data = CONTENT[id];
+    if(!data){
+      modalTitle.textContent = id;
+      modalBody.innerHTML = `<div class="caption">콘텐츠가 아직 없음</div>`;
+    } else {
+      modalTitle.textContent = data.title || id;
 
-    function setupWrap(wrap){
-      const img = wrap.querySelector(".stImg");
-      const hole = wrap.querySelector(".hole");
-
-      const src = img.getAttribute("src");
-      hole.style.webkitMaskImage = `url(${src})`;
-      hole.style.maskImage = `url(${src})`;
-
-      const applySize = () => {
-        if(!img.naturalWidth || !img.naturalHeight) return;
-        const ratio = img.naturalHeight / img.naturalWidth;
-        const pxW = wrap.getBoundingClientRect().width;
-        wrap.style.height = (pxW * ratio) + "px";
-      };
-
-      const onReady = () => {
-        wrap.classList.add("maskReady"); // ✅ 마스크 준비 완료 표시
-        applySize();
-        applyVisited(); // ✅ 마스크 준비된 뒤에 visited 적용 → 흰 네모 선출현 방지
-      };
-
-      if(img.complete && img.naturalWidth) onReady();
-      else img.addEventListener("load", onReady);
-
-      window.addEventListener("resize", applySize);
-
-      img.addEventListener("click", () => openModal(wrap.dataset.id));
-    }
-
-    wraps.forEach(setupWrap);
-
-    function openModal(id){
-      currentStickerId = id;
-      const data = CONTENT[id] || { title: `Sticker ${id}`, caption: "콘텐츠가 아직 없음" };
-
-      modalTitle.textContent = data.title || `Sticker ${id}`;
+      // 콘텐츠 렌더
       let html = "";
-
-      if(data.youtube){
-        html += `
-          <div class="videoWrap">
-            <iframe
-              src="https://www.youtube.com/embed/${data.youtube}?playsinline=1"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              allowfullscreen
-              title="YouTube player"></iframe>
-          </div>
-        `;
-      }
-
       if(data.image){
-        html += `<img src="${data.image}" alt="" style="width:100%;border-radius:16px;display:block;">`;
+        html += `<img src="${data.image}" alt="">`;
       }
-
+      if(data.video){
+        html += `<video src="${data.video}" controls playsinline></video>`;
+      }
+      if(data.html){
+        html += data.html;
+      }
       if(data.caption){
         html += `<div class="caption">${escapeHTML(data.caption)}</div>`;
       }
-
       modalBody.innerHTML = html;
-      overlay.classList.add("open");
-      overlay.setAttribute("aria-hidden","false");
     }
 
-    function markVisited(id){
+    overlay.classList.add('open');
+    overlay.setAttribute('aria-hidden', 'false');
+
+    // 방문 처리(옵션)
+    if(HIDE_AFTER_OPEN){
       const v = readVisits();
       v[id] = true;
       writeVisits(v);
-
-      const w = document.querySelector(`.slotWrap[data-id="${id}"]`);
-      if(!w) return;
-
-      if(w.classList.contains("visited")) return;
-
-      w.classList.add("peeling");
-      setTimeout(()=>{
-        w.classList.remove("peeling");
-        w.classList.add("visited");
-      }, 230);
+      applyVisited();
     }
+  }
 
-    function closeModal(){
-      overlay.classList.remove("open");
-      overlay.setAttribute("aria-hidden","true");
-      modalBody.innerHTML = "";
+  function closeModal(){
+    overlay.classList.remove('open');
+    overlay.setAttribute('aria-hidden', 'true');
+    modalBody.innerHTML = "";
+  }
 
-      if(currentStickerId){
-        markVisited(currentStickerId);
-        currentStickerId = null;
-      }
-    }
+  stickers.forEach(el=>{
+    el.addEventListener('click', ()=> openModal(el.dataset.id));
+  });
 
-    closeBtn.addEventListener("click", closeModal);
-    overlay.addEventListener("click", (e)=>{ if(e.target === overlay) closeModal(); });
-    window.addEventListener("keydown", (e)=>{ if(e.key === "Escape" && overlay.classList.contains("open")) closeModal(); });
+  closeBtn.addEventListener('click', closeModal);
+  overlay.addEventListener('click', (e)=>{
+    if(e.target === overlay) closeModal(); // 바깥 클릭 닫기
+  });
+  window.addEventListener('keydown', (e)=>{
+    if(e.key === "Escape" && overlay.classList.contains('open')) closeModal();
+  });
 
-    resetBtn.addEventListener("click", ()=>{
-      localStorage.removeItem(VISIT_KEY);
-      wraps.forEach(w => w.classList.remove("visited"));
-      alert("초기화 완료!");
-    });
-  })();
-  </script>
+  function escapeHTML(s){
+    return String(s)
+      .replaceAll("&","&amp;")
+      .replaceAll("<","&lt;")
+      .replaceAll(">","&gt;");
+  }
+
+  applyVisited();
+})();
+</script>
+
 </body>
 </html>
